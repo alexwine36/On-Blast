@@ -1,6 +1,6 @@
+import type { AudioEngine, AudioStatus } from "@on-blast/audio";
+import { createWebAudioEngine } from "@on-blast/audio";
 import { useEffect, useRef, useState } from "react";
-import type { AudioEngine, AudioStatus } from "../audio/types";
-import { createWebAudioEngine } from "../audio/webAudioEngine";
 
 export function useAudioEngine() {
 	const engineRef = useRef<AudioEngine | null>(null);
