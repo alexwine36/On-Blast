@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+
+# Downloaded by `bun run setup:assets` — ~52 MB of model + ONNX Runtime binaries.
+public/models/
+public/ort/
