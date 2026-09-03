@@ -15,8 +15,22 @@ const emptyHist = () => new History<HandFrame>(120);
 
 // Explicit configs. DEFAULT_ON_BLAST is a tuning knob and is expected to
 // change, so these must not depend on whichever way it currently points.
-const STRICT = { ...DEFAULT_ON_BLAST, requireApproach: true, approachMin: 1.18, spanMin: 0.15 };
-const LENIENT = { ...DEFAULT_ON_BLAST, requireApproach: false, approachMin: 1.18, spanMin: 0.15 };
+const STRICT = {
+	...DEFAULT_ON_BLAST,
+	handsRequired: 2,
+	requireApproach: true,
+	approachMin: 1.18,
+	spanMin: 0.15,
+};
+const LENIENT = {
+	...DEFAULT_ON_BLAST,
+	handsRequired: 2,
+	requireApproach: false,
+	approachMin: 1.18,
+	spanMin: 0.15,
+};
+/** The shipping shape: one palm, because the other hand holds the phone. */
+const ONE_HAND = { ...DEFAULT_ON_BLAST, handsRequired: 1, spanMin: 0.15 };
 const BIG = 0.17;
 const SMALL = 0.1;
 
@@ -26,7 +40,7 @@ describe("preconditions", () => {
 		expect(detectOnBlast(frame([]), emptyHist()).ok).toBe(false);
 	});
 
-	it("needs both hands", () => {
+	it("needs both hands when two are required", () => {
 		expect(detectOnBlast(frame([hand(OPEN_PALM, 0.9, BIG)]), emptyHist(), LENIENT).ok).toBe(false);
 	});
 
@@ -159,5 +173,47 @@ describe("strict mode: motion is required", () => {
 				500,
 			).ok,
 		).toBe(false);
+	});
+});
+
+describe("single-hand mode", () => {
+	it("fires on one open palm near the camera", () => {
+		const m = detectOnBlast(frame([hand(OPEN_PALM, 0.9, BIG)]), emptyHist(), ONE_HAND);
+		expect(m.ok).toBe(true);
+	});
+
+	it("still needs the palm open", () => {
+		expect(detectOnBlast(frame([hand("Closed_Fist", 0.9, BIG)]), emptyHist(), ONE_HAND).ok).toBe(
+			false,
+		);
+	});
+
+	it("still needs it near the camera", () => {
+		expect(detectOnBlast(frame([hand(OPEN_PALM, 0.9, SMALL)]), emptyHist(), ONE_HAND).ok).toBe(
+			false,
+		);
+	});
+
+	it("ignores a second hand that is nowhere near", () => {
+		// The other hand is holding the phone; it must not block the trigger.
+		const m = detectOnBlast(
+			frame([hand(OPEN_PALM, 0.9, BIG), hand("None", 0.4, 0.03)]),
+			emptyHist(),
+			ONE_HAND,
+		);
+		expect(m.ok).toBe(true);
+	});
+
+	it("measures approach on the nearest palm", () => {
+		const h = emptyHist();
+		h.push(frame([hand(OPEN_PALM, 0.9, 0.1)]), 0);
+		const m = detectOnBlast(
+			frame([hand(OPEN_PALM, 0.9, 0.2)]),
+			h,
+			{ ...ONE_HAND, requireApproach: true, approachMin: 1.18 },
+			500,
+		);
+		expect(m.ok).toBe(true);
+		expect(m.approach).toBeCloseTo(2, 2);
 	});
 });

@@ -18,26 +18,26 @@ export function GestureHud({ metrics, holdProgress, cooldown }: GestureHudProps)
 		{
 			label: "Hands seen",
 			values: [metrics.handsSeen, ""] as [number | string, number | string],
-			limit: "2",
-			pass: metrics.handsSeen >= 2,
+			limit: String(CFG.handsRequired),
+			pass: metrics.handsSeen >= CFG.handsRequired,
 		},
 		{
 			label: "Open palms",
 			values: [metrics.openPalms, ""] as [number | string, number | string],
-			limit: "2",
-			pass: metrics.openPalms >= 2,
+			limit: String(CFG.handsRequired),
+			pass: metrics.openPalms >= CFG.handsRequired,
 		},
 		{
 			label: "Palm score",
 			values: [fmt(metrics.palmScores[0]), fmt(metrics.palmScores[1])] as [string, string],
 			limit: `≥ ${CFG.palmScoreMin}`,
-			pass: metrics.palmScores[1] >= CFG.palmScoreMin,
+			pass: metrics.palmScores[CFG.handsRequired - 1] >= CFG.palmScoreMin,
 		},
 		{
 			label: "Palm span (nearness)",
 			values: [fmt(metrics.spans[0]), fmt(metrics.spans[1])] as [string, string],
 			limit: `≥ ${CFG.spanMin}`,
-			pass: metrics.spans[1] >= CFG.spanMin,
+			pass: metrics.spans[CFG.handsRequired - 1] >= CFG.spanMin,
 		},
 		{
 			label: "Approach rate",

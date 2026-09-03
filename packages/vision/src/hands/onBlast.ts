@@ -5,6 +5,13 @@ import type { HandFrame } from "./types";
 export const OPEN_PALM = "Open_Palm";
 
 export interface OnBlastConfig {
+	/**
+	 * How many open palms must be present.
+	 *
+	 * One, because on a phone the other hand is holding the phone: requiring
+	 * two forces you to either put it down or hold it at arm's length.
+	 */
+	handsRequired: number;
 	/** Minimum classifier confidence for a hand to count as an open palm. */
 	palmScoreMin: number;
 	/** Palm span (normalized) at which a hand counts as "at the screen". */
@@ -24,6 +31,7 @@ export interface OnBlastConfig {
 }
 
 export const DEFAULT_ON_BLAST: OnBlastConfig = {
+	handsRequired: 1,
 	palmScoreMin: 0.5,
 	// Measured on camera: a hand resting at desk height reads ~0.114, and hands
 	// deliberately presented read ~0.185. 0.15 sits between them rather than
@@ -85,12 +93,14 @@ export function detectOnBlast(
 	const palmScores: [number, number] = [scores[0] ?? 0, scores[1] ?? 0];
 	const spans: [number, number] = [spansAll[0] ?? 0, spansAll[1] ?? 0];
 
-	// Compare the current mean span against the same measure one window ago.
+	// Track the nearest palm rather than an average across hands: with a
+	// second hand drifting in and out of frame, a mean jumps for reasons that
+	// have nothing to do with moving toward the camera.
+	const nearestSpan = (f: HandFrame) => (f.hands.length ? Math.max(...f.hands.map(palmSpan)) : 0);
 	const past = history.before(config.approachWindowMs, now);
-	const meanSpan = (f: HandFrame) =>
-		f.hands.length ? f.hands.reduce((s, h) => s + palmSpan(h), 0) / f.hands.length : 0;
-	const nowSpan = meanSpan(frame);
-	const thenSpan = past && past.item.hands.length >= 2 ? meanSpan(past.item) : 0;
+	const nowSpan = nearestSpan(frame);
+	const thenSpan =
+		past && past.item.hands.length >= config.handsRequired ? nearestSpan(past.item) : 0;
 	const approach = thenSpan > 0.01 ? nowSpan / thenSpan : 1;
 
 	const base = {
@@ -101,10 +111,18 @@ export function detectOnBlast(
 		approach,
 	};
 
-	if (handsSeen < 2) return { ...base, ok: false, reason: "need both hands" };
-	if (open.length < 2) return { ...base, ok: false, reason: "open both palms" };
+	const need = config.handsRequired;
+	if (handsSeen < need) {
+		return { ...base, ok: false, reason: need > 1 ? "need both hands" : "show a hand" };
+	}
+	if (open.length < need) {
+		return { ...base, ok: false, reason: need > 1 ? "open both palms" : "open your palm" };
+	}
 
-	const bigEnough = spans[1] >= config.spanMin; // the smaller of the two
+	// Gate on the least-near of the hands we require, so a hand at the lens
+	// cannot carry one still hanging back.
+	const gateSpan = spans[Math.min(need, spans.length) - 1] ?? 0;
+	const bigEnough = gateSpan >= config.spanMin;
 	const approaching = approach >= config.approachMin;
 
 	if (config.requireApproach) {
