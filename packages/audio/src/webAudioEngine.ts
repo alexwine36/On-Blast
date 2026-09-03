@@ -154,14 +154,12 @@ export function createWebAudioEngine({
 	/** One looping vocal grain whose rate is retuned per note. Kept running
 	 *  rather than retriggered, so stepping notes never clicks. */
 	let voiceSource: AudioBufferSourceNode | null = null;
-	let voiceBuffer: AudioBuffer | null = null;
 
 	if (voiceUrl) {
 		void fetch(voiceUrl)
 			.then((r) => r.arrayBuffer())
 			.then((b) => ctx.decodeAudioData(b))
 			.then((buf) => {
-				voiceBuffer = buf;
 				const src = ctx.createBufferSource();
 				src.buffer = buf;
 				src.loop = true;
@@ -206,6 +204,68 @@ export function createWebAudioEngine({
 	}
 
 	/**
+	 * A plain subtractive synth voice: detuned saws, a sub, a touch of
+	 * saturation for grit, and a filter envelope.
+	 *
+	 * Deliberately not the pitch-shifted vocal grain — that carried the source
+	 * recording's own character into every note, which is wrong for a
+	 * composed line.
+	 */
+	function synthNote(freq: number, start: number, dur: number): void {
+		const amp = ctx.createGain();
+		amp.gain.setValueAtTime(0.0001, start);
+		amp.gain.linearRampToValueAtTime(PHRASE_LEVEL, start + PHRASE_ENV.attack);
+		amp.gain.linearRampToValueAtTime(
+			PHRASE_LEVEL * PHRASE_ENV.sustain,
+			start + PHRASE_ENV.attack + PHRASE_ENV.decay,
+		);
+		// Release runs past the note so short sixteenths still ring a little
+		// rather than clicking off.
+		amp.gain.setValueAtTime(PHRASE_LEVEL * PHRASE_ENV.sustain, start + Math.max(dur, 0.05));
+		amp.gain.exponentialRampToValueAtTime(0.0001, start + dur + PHRASE_ENV.release);
+
+		const filter = ctx.createBiquadFilter();
+		filter.type = "lowpass";
+		filter.Q.value = 4;
+		// The filter envelope is most of what reads as "synth".
+		filter.frequency.setValueAtTime(Math.min(14000, freq * 10), start);
+		filter.frequency.exponentialRampToValueAtTime(
+			Math.min(9000, freq * 3.2),
+			start + PHRASE_ENV.attack + PHRASE_ENV.decay,
+		);
+
+		const grit = ctx.createWaveShaper();
+		grit.curve = distortionCurve(PHRASE_DRIVE);
+		grit.oversample = "2x";
+		const preGain = ctx.createGain();
+		preGain.gain.value = 0.7;
+
+		preGain.connect(grit);
+		grit.connect(filter);
+		filter.connect(amp);
+		amp.connect(master);
+
+		const stop = start + dur + PHRASE_ENV.release + 0.05;
+		// Two saws a few cents apart give width; the square sub adds weight.
+		for (const [type, detune, level] of [
+			["sawtooth", -7, 1],
+			["sawtooth", 7, 1],
+			["square", 0, 0.28],
+		] as const) {
+			const osc = ctx.createOscillator();
+			osc.type = type;
+			osc.frequency.value = type === "square" ? freq / 2 : freq;
+			osc.detune.value = detune;
+			const g = ctx.createGain();
+			g.gain.value = level * 0.33;
+			osc.connect(g);
+			g.connect(preGain);
+			osc.start(start);
+			osc.stop(stop);
+		}
+	}
+
+	/**
 	 * Schedule a phrase against the audio clock.
 	 *
 	 * Every note is placed up front at an absolute time rather than fired from
@@ -215,50 +275,8 @@ export function createWebAudioEngine({
 	function playPhrase(phrase: Phrase): void {
 		if (ctx.state !== "running") void ctx.resume();
 		const t0 = ctx.currentTime + 0.02;
-
 		for (const note of phrase.notes) {
-			const start = t0 + note.startMs / 1000;
-			const dur = note.durMs / 1000;
-			const freq = midiToFreq(note.midi);
-
-			const gain = ctx.createGain();
-			gain.gain.setValueAtTime(0.0001, start);
-			gain.gain.linearRampToValueAtTime(VOICE_LEVEL * 1.4, start + 0.012);
-			gain.gain.setValueAtTime(VOICE_LEVEL * 1.4, start + Math.max(0.02, dur * 0.7));
-			// Short release so fast sixteenths stay articulate instead of smearing.
-			gain.gain.exponentialRampToValueAtTime(0.0001, start + dur + 0.06);
-
-			const filter = ctx.createBiquadFilter();
-			filter.type = "lowpass";
-			filter.frequency.value = 9000;
-			gain.connect(filter);
-			filter.connect(master);
-
-			if (voiceBuffer) {
-				const src = ctx.createBufferSource();
-				src.buffer = voiceBuffer;
-				src.loop = true;
-				src.playbackRate.value = freq / VOICE_BASE_FREQ;
-				src.connect(gain);
-				src.start(start);
-				src.stop(start + dur + 0.1);
-			} else {
-				// Oscillator fallback, so a missing sample never means silence.
-				for (const [type, level] of [
-					["triangle", 1],
-					["sawtooth", 0.3],
-				] as const) {
-					const osc = ctx.createOscillator();
-					osc.type = type;
-					osc.frequency.value = freq;
-					const g = ctx.createGain();
-					g.gain.value = level;
-					osc.connect(g);
-					g.connect(gain);
-					osc.start(start);
-					osc.stop(start + dur + 0.1);
-				}
-			}
+			synthNote(midiToFreq(note.midi), t0 + note.startMs / 1000, note.durMs / 1000);
 		}
 	}
 
@@ -324,6 +342,11 @@ export function createWebAudioEngine({
 	 * the reference's 9.8%.
 	 */
 	const STING_DRIVE = 9;
+
+	/** Phrase voice. Mild drive: grit, not fuzz. */
+	const PHRASE_DRIVE = 2.6;
+	const PHRASE_LEVEL = 0.17;
+	const PHRASE_ENV = { attack: 0.006, decay: 0.09, sustain: 0.62, release: 0.12 };
 
 	/** tanh soft-clip. Saturates rather than hard-clipping, so it grits up
 	 *  instead of buzzing. */

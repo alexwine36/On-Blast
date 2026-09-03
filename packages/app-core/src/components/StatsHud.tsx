@@ -6,9 +6,11 @@ interface StatsHudProps {
 	stingSource: "sample" | "synth";
 	/** False once the phrase has played; only an ON BLAST re-arms it. */
 	phraseArmed: boolean;
+	/** Set when the body model failed to load, e.g. it was never staged. */
+	bodyError?: string | null;
 }
 
-export function StatsHud({ stats, ready, stingSource, phraseArmed }: StatsHudProps) {
+export function StatsHud({ stats, ready, stingSource, phraseArmed, bodyError }: StatsHudProps) {
 	const backendKnown = ready && stats.backend !== "—";
 
 	return (
@@ -26,7 +28,11 @@ export function StatsHud({ stats, ready, stingSource, phraseArmed }: StatsHudPro
 				<dd>
 					{stats.inferenceMs > 0 ? `${stats.inferenceMs.toFixed(0)}` : "—"}
 					{" / "}
-					{stats.bodyMs > 0 ? `${stats.bodyMs.toFixed(0)} ms` : "— ms"}
+					{bodyError ? (
+						<span className="hud__badge hud__badge--cpu">failed</span>
+					) : (
+						`${stats.bodyMs > 0 ? stats.bodyMs.toFixed(0) : "—"} ms`
+					)}
 				</dd>
 			</div>
 			<div className="hud__item">

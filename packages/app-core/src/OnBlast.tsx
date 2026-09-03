@@ -116,6 +116,12 @@ export function OnBlast({ assetBase, features }: OnBlastProps = {}) {
 			title: "Could not load the hand model",
 			detail: model.error ?? undefined,
 		};
+	} else if (flags.armPhrase && body.error) {
+		notice = {
+			tone: "error",
+			title: "Arm tracking unavailable",
+			detail: `${body.error}. The hand trigger still works; the phrase needs the body model.`,
+		};
 	} else if (model.status === "loading") {
 		notice = {
 			tone: "info",
@@ -178,6 +184,7 @@ export function OnBlast({ assetBase, features }: OnBlastProps = {}) {
 					/>
 				) : null}
 				<StatsHud
+					bodyError={body.error}
 					phraseArmed={armed}
 					stats={stats}
 					ready={model.status === "ready"}
