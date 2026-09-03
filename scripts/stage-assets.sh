@@ -36,10 +36,14 @@ echo "==> gesture_recognizer.task"
 curl -fsSL -o "$DEST/mediapipe/models/gesture_recognizer.task" \
   "$MODEL_BASE/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task"
 
-# Required again: the arm-phrase trigger needs body pose.
-echo "==> pose_landmarker_lite.task"
-curl -fsSL -o "$DEST/mediapipe/models/pose_landmarker_lite.task" \
-  "$MODEL_BASE/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task"
+# Body pose is not loaded by the app: the phrase now triggers on a pointing
+# hand, which comes from the gesture model. Set WITH_BODY_MODEL=1 to stage it
+# anyway if the posture code is re-enabled.
+if [ "${WITH_BODY_MODEL:-0}" = "1" ]; then
+  echo "==> pose_landmarker_lite.task"
+  curl -fsSL -o "$DEST/mediapipe/models/pose_landmarker_lite.task" \
+    "$MODEL_BASE/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task"
+fi
 
 # Audio. The sting is licensed and git-ignored, so it is present locally and
 # absent in CI — the engine falls back to its synthesized sting either way.

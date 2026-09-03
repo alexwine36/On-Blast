@@ -12,6 +12,14 @@ export type { HandDetectorOptions } from "./hands/mediapipeDetector";
 export { createMediaPipeHandDetector } from "./hands/mediapipeDetector";
 export type { OnBlastConfig, OnBlastMetrics } from "./hands/onBlast";
 export { DEFAULT_ON_BLAST, detectOnBlast, NO_ON_BLAST, OPEN_PALM } from "./hands/onBlast";
+export type { PointingConfig, PointingMetrics } from "./hands/pointing";
+export {
+	DEFAULT_POINTING,
+	detectPointing,
+	NO_POINTING,
+	POINTING_UP,
+	toUserHand,
+} from "./hands/pointing";
 export type { Hand, HandDetector, HandFrame, HandLandmark } from "./hands/types";
 export type { Stamped } from "./util/history";
 // Timing primitives. Only vision consumes these today; they would justify

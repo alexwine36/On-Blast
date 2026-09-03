@@ -7,7 +7,7 @@ import { CameraPicker } from "./components/CameraPicker";
 import { CameraView } from "./components/CameraView";
 import { GestureHud } from "./components/GestureHud";
 import { HitOverlay } from "./components/HitOverlay";
-import { ShoulderHud } from "./components/ShoulderHud";
+import { PointHud } from "./components/PointHud";
 import { StatsHud } from "./components/StatsHud";
 import type { Features } from "./features";
 import { DEFAULT_FEATURES } from "./features";
@@ -49,10 +49,9 @@ export function OnBlast({ assetBase, features }: OnBlastProps = {}) {
 
 	const camera = useCamera(deviceId);
 	const model = useHandDetector({ wasmPath: assets.wasmPath, modelPath: assets.handModel });
-	const body = useBodyDetector(
-		{ wasmPath: assets.wasmPath, modelPath: assets.bodyModel },
-		flags.armPhrase,
-	);
+	// Body pose is no longer loaded: the phrase trigger reads the hand frame,
+	// which saves the 5.5 MB pose model and roughly halves per-frame inference.
+	const body = useBodyDetector({ wasmPath: assets.wasmPath, modelPath: assets.bodyModel }, false);
 	const audio = useAudioEngine({
 		stingUrl: assets.sting,
 		voiceUrl: assets.voice,
@@ -76,7 +75,7 @@ export function OnBlast({ assetBase, features }: OnBlastProps = {}) {
 		setHitVisible(true);
 	}, [audio]);
 
-	const handleArmsOut = useCallback(() => {
+	const handlePoint = useCallback(() => {
 		if (!flags.armPhrase || !phraseArmed.current) return;
 		phraseArmed.current = false;
 		setArmed(false);
@@ -104,7 +103,7 @@ export function OnBlast({ assetBase, features }: OnBlastProps = {}) {
 		stream: camera.stream,
 		active: true,
 		onTrigger: handleTrigger,
-		onArmsOut: handleArmsOut,
+		onPoint: handlePoint,
 		onPosture: handlePosture,
 	});
 
@@ -178,15 +177,7 @@ export function OnBlast({ assetBase, features }: OnBlastProps = {}) {
 					holdProgress={stats.holdProgress}
 					cooldown={stats.cooldown}
 				/>
-				{flags.armPhrase ? (
-					<ShoulderHud
-						posture={stats.posture}
-						note={audio.note}
-						keyName={audio.keyName}
-						toneSource={audio.toneSource}
-						tempoLabel={audio.tempoLabel}
-					/>
-				) : null}
+				{flags.armPhrase ? <PointHud armed={armed} pointing={stats.pointing} /> : null}
 				<StatsHud
 					bodyError={body.error}
 					phraseSource={audio.phraseSource}

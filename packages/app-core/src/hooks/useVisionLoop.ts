@@ -4,15 +4,18 @@ import type {
 	HandDetector,
 	HandFrame,
 	OnBlastMetrics,
+	PointingMetrics,
 	PostureMetrics,
 } from "@on-blast/vision";
 import {
 	detectOnBlast,
+	detectPointing,
 	detectPosture,
 	drawHand,
 	History,
 	HoldTrigger,
 	NO_ON_BLAST,
+	NO_POINTING,
 	NO_POSTURE,
 	palmSpan,
 } from "@on-blast/vision";
@@ -22,8 +25,8 @@ import { useEffect, useRef, useState } from "react";
 const HOLD_MS = 5;
 /** Disarm window after a hit, so one gesture is one sting. */
 const COOLDOWN_MS = 150;
-/** Arms must be held out briefly before the phrase fires. */
-const ARMS_HOLD_MS = 250;
+/** The point must be held briefly before the phrase fires. */
+const POINT_HOLD_MS = 250;
 
 const HAND_COLORS = ["rgb(0,255,0)", "rgb(51,153,255)"];
 
@@ -37,6 +40,7 @@ export interface VisionStats {
 	/** 0..1 remaining cooldown after a hit; 0 when armed. */
 	cooldown: number;
 	posture: PostureMetrics;
+	pointing: PointingMetrics;
 	bodyMs: number;
 }
 
@@ -49,6 +53,7 @@ const EMPTY_STATS: VisionStats = {
 	holdProgress: 0,
 	cooldown: 0,
 	posture: NO_POSTURE,
+	pointing: NO_POINTING,
 	bodyMs: 0,
 };
 
@@ -78,8 +83,8 @@ interface Options {
 	/** When false the detect loop idles — used to freeze things after the sting. */
 	active: boolean;
 	onTrigger: () => void;
-	/** Fires on the edge where the arms reach the outstretched pose. */
-	onArmsOut: () => void;
+	/** Fires on the edge where the requested hand raises an index finger. */
+	onPoint: () => void;
 	/** Called every detection pass with the current shoulder state. */
 	onPosture: (posture: PostureMetrics) => void;
 }
@@ -90,7 +95,7 @@ export function useVisionLoop({
 	stream,
 	active,
 	onTrigger,
-	onArmsOut,
+	onPoint,
 	onPosture,
 }: Options) {
 	const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -106,14 +111,15 @@ export function useVisionLoop({
 	const detectFps = useRef(new FpsCounter());
 	const bodyFrameRef = useRef<BodyFrame | null>(null);
 	const postureRef = useRef<PostureMetrics>(NO_POSTURE);
+	const pointingRef = useRef<PointingMetrics>(NO_POINTING);
 	const onTriggerRef = useRef(onTrigger);
 	onTriggerRef.current = onTrigger;
 	const onPostureRef = useRef(onPosture);
 	onPostureRef.current = onPosture;
-	const onArmsOutRef = useRef(onArmsOut);
-	onArmsOutRef.current = onArmsOut;
+	const onPointRef = useRef(onPoint);
+	onPointRef.current = onPoint;
 	// Edge-triggered with release required, so holding the pose fires once.
-	const armsHoldRef = useRef(new HoldTrigger(ARMS_HOLD_MS, 0));
+	const pointHoldRef = useRef(new HoldTrigger(POINT_HOLD_MS, 0));
 
 	const [stats, setStats] = useState<VisionStats>(EMPTY_STATS);
 
@@ -204,6 +210,12 @@ export function useVisionLoop({
 					const metrics = detectOnBlast(frame, historyRef.current, undefined, now);
 					metricsRef.current = metrics;
 
+					const pointing = detectPointing(frame);
+					pointingRef.current = pointing;
+					if (pointHoldRef.current.update(pointing.ok, now).fired) {
+						onPointRef.current();
+					}
+
 					// Body pose is optional: the sting works without it, so a missing or
 					// still-loading body model must not stall hand detection.
 					if (bodyDetector) {
@@ -212,9 +224,6 @@ export function useVisionLoop({
 						const posture = detectPosture(body);
 						postureRef.current = posture;
 						onPostureRef.current(posture);
-						if (armsHoldRef.current.update(posture.armsOut, now).fired) {
-							onArmsOutRef.current();
-						}
 					}
 
 					const { progress, fired, cooldown } = holdRef.current.update(metrics.ok, now);
@@ -237,7 +246,7 @@ export function useVisionLoop({
 		return () => {
 			running = false;
 			holdRef.current.reset();
-			armsHoldRef.current.reset();
+			pointHoldRef.current.reset();
 			holdProgressRef.current = 0;
 			cooldownRef.current = 0;
 		};
@@ -255,6 +264,7 @@ export function useVisionLoop({
 				holdProgress: holdProgressRef.current,
 				cooldown: cooldownRef.current,
 				posture: postureRef.current,
+				pointing: pointingRef.current,
 				bodyMs: bodyFrameRef.current?.inferenceMs ?? 0,
 			});
 		}, 100);
@@ -267,8 +277,9 @@ export function useVisionLoop({
 		metricsRef.current = NO_ON_BLAST;
 		bodyFrameRef.current = null;
 		postureRef.current = NO_POSTURE;
+		pointingRef.current = NO_POINTING;
 		holdRef.current.reset();
-		armsHoldRef.current.reset();
+		pointHoldRef.current.reset();
 		holdProgressRef.current = 0;
 		cooldownRef.current = 0;
 	};
