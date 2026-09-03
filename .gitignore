@@ -8,7 +8,6 @@ dist-ssr
 # Source recordings kept locally, not distributed.
 *.m4a
 
-# Licensed audio: local prototype only, must not reach a public repo.
-# The engine falls back to a synthesized sting when absent.
-packages/app-core/assets/audio/sting.wav
+# The raw source clip stays local; the trimmed sting.wav that the app actually
+# plays is committed. See ATTRIBUTION.md.
 packages/app-core/assets/audio/sting-source.m4a
