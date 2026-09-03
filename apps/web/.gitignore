@@ -5,5 +5,4 @@ dist-ssr
 .DS_Store
 
 # Staged by `bun run setup:assets`; never committed.
-public/mediapipe/
-public/audio/
+public/
