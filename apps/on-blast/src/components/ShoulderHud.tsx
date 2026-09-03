@@ -1,5 +1,5 @@
-import type { PostureMetrics } from "../body/posture";
-import { DEFAULT_POSTURE as CFG } from "../body/posture";
+import type { PostureMetrics } from "@on-blast/vision";
+import { DEFAULT_POSTURE as CFG } from "@on-blast/vision";
 
 interface ShoulderHudProps {
 	posture: PostureMetrics;

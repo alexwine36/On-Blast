@@ -1,5 +1,5 @@
+import type { PostureMetrics } from "@on-blast/vision";
 import { useCallback, useEffect, useState } from "react";
-import type { PostureMetrics } from "./body/posture";
 import { CameraPicker } from "./components/CameraPicker";
 import { CameraView } from "./components/CameraView";
 import { GestureHud } from "./components/GestureHud";

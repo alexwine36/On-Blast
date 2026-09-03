@@ -15,8 +15,8 @@
       "name": "on-blast",
       "version": "0.1.0",
       "dependencies": {
-        "@mediapipe/tasks-vision": "^1.0.1",
         "@on-blast/audio": "workspace:*",
+        "@on-blast/vision": "workspace:*",
         "@tauri-apps/api": "^2",
         "@tauri-apps/plugin-opener": "^2",
         "react": "^19.1.0",
@@ -34,6 +34,16 @@
     "packages/audio": {
       "name": "@on-blast/audio",
       "version": "0.0.0",
+      "devDependencies": {
+        "typescript": "~5.8.3",
+      },
+    },
+    "packages/vision": {
+      "name": "@on-blast/vision",
+      "version": "0.0.0",
+      "dependencies": {
+        "@mediapipe/tasks-vision": "^1.0.1",
+      },
       "devDependencies": {
         "typescript": "~5.8.3",
       },
@@ -163,6 +173,8 @@
     "@napi-rs/lzma-linux-x64-gnu": ["@napi-rs/lzma-linux-x64-gnu@1.5.1", "", { "os": "linux", "cpu": "x64" }, "sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ=="],
 
     "@on-blast/audio": ["@on-blast/audio@workspace:packages/audio"],
+
+    "@on-blast/vision": ["@on-blast/vision@workspace:packages/vision"],
 
     "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.0-beta.27", "", {}, "sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA=="],
 

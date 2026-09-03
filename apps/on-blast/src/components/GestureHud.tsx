@@ -1,5 +1,5 @@
-import type { OnBlastMetrics } from "../hands/onBlast";
-import { DEFAULT_ON_BLAST as CFG } from "../hands/onBlast";
+import type { OnBlastMetrics } from "@on-blast/vision";
+import { DEFAULT_ON_BLAST as CFG } from "@on-blast/vision";
 
 interface GestureHudProps {
 	metrics: OnBlastMetrics;

@@ -1,13 +1,22 @@
+import type {
+	BodyDetector,
+	BodyFrame,
+	HandDetector,
+	HandFrame,
+	OnBlastMetrics,
+	PostureMetrics,
+} from "@on-blast/vision";
+import {
+	detectOnBlast,
+	detectPosture,
+	drawHand,
+	History,
+	HoldTrigger,
+	NO_ON_BLAST,
+	NO_POSTURE,
+	palmSpan,
+} from "@on-blast/vision";
 import { useEffect, useRef, useState } from "react";
-import type { PostureMetrics } from "../body/posture";
-import { detectPosture, NO_POSTURE } from "../body/posture";
-import type { BodyDetector, BodyFrame } from "../body/types";
-import { drawHand, palmSpan } from "../hands/landmarks";
-import type { OnBlastMetrics } from "../hands/onBlast";
-import { detectOnBlast, NO_ON_BLAST } from "../hands/onBlast";
-import type { HandDetector, HandFrame } from "../hands/types";
-import { History } from "../util/history";
-import { HoldTrigger } from "../util/holdTrigger";
 
 /** How long the pose must hold before firing, to reject a hand passing through. */
 const HOLD_MS = 5;

@@ -1,6 +1,6 @@
+import type { BodyDetector } from "@on-blast/vision";
+import { createMediaPipeBodyDetector } from "@on-blast/vision";
 import { useEffect, useState } from "react";
-import { createMediaPipeBodyDetector } from "../body/mediapipeBodyDetector";
-import type { BodyDetector } from "../body/types";
 
 /** Singleton for the same reasons as the hand detector — see useHandDetector. */
 let cached: Promise<BodyDetector> | null = null;

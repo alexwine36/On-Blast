@@ -1,6 +1,6 @@
+import type { HandDetector } from "@on-blast/vision";
+import { createMediaPipeHandDetector } from "@on-blast/vision";
 import { useEffect, useState } from "react";
-import { createMediaPipeHandDetector } from "../hands/mediapipeDetector";
-import type { HandDetector } from "../hands/types";
 
 export type DetectorStatus = "loading" | "ready" | "error";
 
