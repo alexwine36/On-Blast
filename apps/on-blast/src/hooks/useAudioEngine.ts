@@ -1,44 +1,59 @@
 import { useEffect, useRef, useState } from "react";
-import { createWebAudioEngine } from "../audio/webAudioEngine";
 import type { AudioEngine, AudioStatus } from "../audio/types";
+import { createWebAudioEngine } from "../audio/webAudioEngine";
 
 export function useAudioEngine() {
-  const engineRef = useRef<AudioEngine | null>(null);
-  const [status, setStatus] = useState<AudioStatus>("idle");
-  const [source, setSource] = useState<"sample" | "synth">("synth");
+	const engineRef = useRef<AudioEngine | null>(null);
+	const [status, setStatus] = useState<AudioStatus>("idle");
+	const [source, setSource] = useState<"sample" | "synth">("synth");
+	const [toneSource, setToneSource] = useState<"sample" | "synth">("synth");
+	const [note, setNote] = useState<string | null>(null);
 
-  useEffect(() => {
-    const engine = createWebAudioEngine();
-    engineRef.current = engine;
-    setStatus(engine.status);
+	useEffect(() => {
+		const engine = createWebAudioEngine();
+		engineRef.current = engine;
+		setStatus(engine.status);
 
-    // Autoplay policy keeps the context suspended until a real interaction.
-    const unlock = () => {
-      void engine.unlock().then(() => setStatus(engine.status));
-    };
-    window.addEventListener("pointerdown", unlock);
-    window.addEventListener("keydown", unlock);
-    unlock();
+		// Autoplay policy keeps the context suspended until a real interaction.
+		const unlock = () => {
+			void engine.unlock().then(() => setStatus(engine.status));
+		};
+		window.addEventListener("pointerdown", unlock);
+		window.addEventListener("keydown", unlock);
+		unlock();
 
-    const poll = setInterval(() => {
-      setStatus(engine.status);
-      setSource(engine.source);
-    }, 500);
+		const poll = setInterval(() => {
+			setStatus(engine.status);
+			setSource(engine.source);
+			setToneSource(engine.toneSource);
+		}, 500);
+		// The note changes far faster than the status poll, so sample it tighter.
+		const notePoll = setInterval(() => setNote(engine.currentNote), 80);
 
-    return () => {
-      window.removeEventListener("pointerdown", unlock);
-      window.removeEventListener("keydown", unlock);
-      clearInterval(poll);
-      engine.dispose();
-      engineRef.current = null;
-    };
-  }, []);
+		return () => {
+			window.removeEventListener("pointerdown", unlock);
+			window.removeEventListener("keydown", unlock);
+			clearInterval(poll);
+			clearInterval(notePoll);
+			engine.dispose();
+			engineRef.current = null;
+		};
+	}, []);
 
-  return {
-    status,
-    source,
-    playSting: () => engineRef.current?.playSting(),
-    setDrone: (active: boolean, pitch: number) => engineRef.current?.setDrone(active, pitch),
-    unlock: () => engineRef.current?.unlock().then(() => setStatus(engineRef.current!.status)),
-  };
+	return {
+		status,
+		source,
+		note,
+		toneSource,
+		keyName: engineRef.current?.keyName ?? "",
+		tempoLabel: engineRef.current?.tempoLabel ?? "",
+		playSting: () => engineRef.current?.playSting(),
+		setTone: (active: boolean, pitch: number) => engineRef.current?.setTone(active, pitch),
+		unlock: async () => {
+			const engine = engineRef.current;
+			if (!engine) return;
+			await engine.unlock();
+			setStatus(engine.status);
+		},
+	};
 }

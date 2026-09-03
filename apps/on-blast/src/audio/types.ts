@@ -9,17 +9,25 @@ export type AudioStatus = "idle" | "blocked" | "ready";
  * later means implementing this interface.
  */
 export interface AudioEngine {
-  readonly status: AudioStatus;
-  /** "sample" once the sting file decoded, "synth" while falling back to it. */
-  readonly source: "sample" | "synth";
-  /** Browsers start audio suspended until a user gesture; call from a click. */
-  unlock(): Promise<void>;
-  /** The punchline hit. */
-  playSting(): void;
-  /**
-   * The shoulder-driven drone. `pitch` is 0..1 (shoulders down..up); `active`
-   * fades it in and out. Safe to call every frame — changes are smoothed.
-   */
-  setDrone(active: boolean, pitch: number): void;
-  dispose(): void;
+	readonly status: AudioStatus;
+	/** "sample" once the sting file decoded, "synth" while falling back to it. */
+	readonly source: "sample" | "synth";
+	/** Browsers start audio suspended until a user gesture; call from a click. */
+	unlock(): Promise<void>;
+	/** The punchline hit. */
+	playSting(): void;
+	/**
+	 * The shoulder-driven voice. `pitch` is 0..1 (shoulders down..up), quantized
+	 * to a musical scale rather than swept. Safe to call every frame.
+	 */
+	setTone(active: boolean, pitch: number): void;
+	/** Name of the note currently sounding, e.g. "C4", or null when silent. */
+	readonly currentNote: string | null;
+	/** Musical key of the voice, e.g. "C major (8B)". */
+	readonly keyName: string;
+	/** Note-change grid, e.g. "100 BPM 1/16". */
+	readonly tempoLabel: string;
+	/** Whether the shoulder tone is the vocal sample or the synth fallback. */
+	readonly toneSource: "sample" | "synth";
+	dispose(): void;
 }

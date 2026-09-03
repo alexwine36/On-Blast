@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { drawHand, palmSpan } from "../hands/landmarks";
-import { detectOnBlast, NO_ON_BLAST } from "../hands/onBlast";
-import type { OnBlastMetrics } from "../hands/onBlast";
-import type { HandDetector, HandFrame } from "../hands/types";
-import { detectPosture, NO_POSTURE } from "../body/posture";
 import type { PostureMetrics } from "../body/posture";
+import { detectPosture, NO_POSTURE } from "../body/posture";
 import type { BodyDetector, BodyFrame } from "../body/types";
+import { drawHand, palmSpan } from "../hands/landmarks";
+import type { OnBlastMetrics } from "../hands/onBlast";
+import { detectOnBlast, NO_ON_BLAST } from "../hands/onBlast";
+import type { HandDetector, HandFrame } from "../hands/types";
 import { History } from "../util/history";
 import { HoldTrigger } from "../util/holdTrigger";
 
@@ -58,8 +58,7 @@ class FpsCounter {
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-const nextFrame = () =>
-	new Promise<void>((r) => requestAnimationFrame(() => r()));
+const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 
 interface Options {
 	detector: HandDetector | null;
@@ -141,8 +140,7 @@ export function useVisionLoop({
 				// out with object-fit: contain — so reproduce that fit here or the
 				// overlay drifts off the hands.
 				const frameAspect = vw / vh;
-				const drawWidth =
-					width / height > frameAspect ? height * frameAspect : width;
+				const drawWidth = width / height > frameAspect ? height * frameAspect : width;
 				const drawHeight = drawWidth / frameAspect;
 
 				ctx.save();
@@ -185,12 +183,7 @@ export function useVisionLoop({
 					historyRef.current.push(frame, now);
 					detectFps.current.tick();
 
-					const metrics = detectOnBlast(
-						frame,
-						historyRef.current,
-						undefined,
-						now,
-					);
+					const metrics = detectOnBlast(frame, historyRef.current, undefined, now);
 					metricsRef.current = metrics;
 
 					// Body pose is optional: the sting works without it, so a missing or
@@ -203,10 +196,7 @@ export function useVisionLoop({
 						onPostureRef.current(posture);
 					}
 
-					const { progress, fired, cooldown } = holdRef.current.update(
-						metrics.ok,
-						now,
-					);
+					const { progress, fired, cooldown } = holdRef.current.update(metrics.ok, now);
 					holdProgressRef.current = progress;
 					cooldownRef.current = cooldown;
 					// Detection continues after a hit; HoldTrigger's cooldown is what

@@ -6,11 +6,11 @@
  * element otherwise requires forcing a reflow.
  */
 export function HitOverlay() {
-  return (
-    <div className="hit" aria-live="polite">
-      <div className="hit__card">
-        <span className="hit__text">ON BLAST</span>
-      </div>
-    </div>
-  );
+	return (
+		<div className="hit" aria-live="polite">
+			<div className="hit__card">
+				<span className="hit__text">ON BLAST</span>
+			</div>
+		</div>
+	);
 }

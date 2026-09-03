@@ -1,447 +1,491 @@
 :root {
-  --bg: #101114;
-  --panel: #17191e;
-  --border: #272a31;
-  --text: #e8eaed;
-  --muted: #8c929e;
-  --accent: #6ea8fe;
-  --error: #ff8f8f;
+	--bg: #101114;
+	--panel: #17191e;
+	--border: #272a31;
+	--text: #e8eaed;
+	--muted: #8c929e;
+	--accent: #6ea8fe;
+	--error: #ff8f8f;
 }
 
 * {
-  box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 html,
 body,
 #root {
-  height: 100%;
-  margin: 0;
+	height: 100%;
+	margin: 0;
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  -webkit-font-smoothing: antialiased;
+	background: var(--bg);
+	color: var(--text);
+	font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	-webkit-font-smoothing: antialiased;
 }
 
 .app {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  height: 100%;
-  padding: 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	height: 100%;
+	padding: 20px;
 }
 
 .app__bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: center;
+	justify-content: space-between;
 }
 
 .app__title {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+	margin: 0;
+	font-size: 17px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
 }
 
 .app__subtitle {
-  color: var(--muted);
-  font-weight: 400;
+	color: var(--muted);
+	font-weight: 400;
 }
 
 /* Stage: the video and its overlay share one box exactly. The video letterboxes
    inside it via object-fit: contain, and the render loop reproduces that same
    fit when placing keypoints. */
 .stage {
-  position: relative;
-  width: 100%;
-  min-height: 0;
-  flex: 1 1 auto;
-  overflow: hidden;
-  align-self: center;
-  max-width: 100%;
-  max-height: 100%;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #000;
+	position: relative;
+	width: 100%;
+	min-height: 0;
+	flex: 1 1 auto;
+	overflow: hidden;
+	align-self: center;
+	max-width: 100%;
+	max-height: 100%;
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	background: #000;
 }
 
 .stage__video,
 .stage__overlay {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
 }
 
 .stage__video {
-  object-fit: contain;
+	object-fit: contain;
 }
 
 /* Selfie view. Applying the same flip to both layers keeps the overlay aligned
    without touching any keypoint coordinates. */
 .stage__video,
 .stage__overlay {
-  transform: scaleX(-1);
+	transform: scaleX(-1);
 }
 
 .stage__overlay {
-  pointer-events: none;
+	pointer-events: none;
 }
 
 .stage__notice {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgba(16, 17, 20, 0.72);
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	padding: 24px;
+	background: rgba(16, 17, 20, 0.72);
 }
 
 .notice {
-  max-width: 46ch;
-  padding: 16px 18px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--panel);
-  text-align: center;
+	max-width: 46ch;
+	padding: 16px 18px;
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	background: var(--panel);
+	text-align: center;
 }
 
 .notice--error {
-  border-color: #56303a;
+	border-color: #56303a;
 }
 
 .notice__title {
-  font-size: 14px;
+	font-size: 14px;
 }
 
 .notice--error .notice__title {
-  color: var(--error);
+	color: var(--error);
 }
 
 .notice__detail {
-  margin: 8px 0 0;
-  color: var(--muted);
-  font-size: 12.5px;
-  line-height: 1.5;
+	margin: 8px 0 0;
+	color: var(--muted);
+	font-size: 12.5px;
+	line-height: 1.5;
 }
 
 /* HUD */
 .hud {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0;
 }
 
 .hud__item {
-  flex: 1 1 110px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--panel);
+	flex: 1 1 110px;
+	padding: 8px 12px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--panel);
 }
 
 .hud dt {
-  color: var(--muted);
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+	color: var(--muted);
+	font-size: 10.5px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
 }
 
 .hud dd {
-  margin: 4px 0 0;
-  font-size: 15px;
-  font-variant-numeric: tabular-nums;
+	margin: 4px 0 0;
+	font-size: 15px;
+	font-variant-numeric: tabular-nums;
 }
 
 .hud__badge {
-  font-size: 13px;
-  font-weight: 600;
+	font-size: 13px;
+	font-weight: 600;
 }
 
 .hud__badge--webgpu {
-  color: #7ee2a8;
+	color: #7ee2a8;
 }
 
 .hud__badge--cpu {
-  color: #ffc978;
+	color: #ffc978;
 }
 
 .hud__badge--pending {
-  color: var(--muted);
+	color: var(--muted);
 }
 
 /* Camera picker */
 .picker {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
+	display: inline-flex;
+	gap: 8px;
+	align-items: center;
 }
 
 .picker__label {
-  color: var(--muted);
-  font-size: 12px;
+	color: var(--muted);
+	font-size: 12px;
 }
 
 .picker__select {
-  max-width: 260px;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--panel);
-  color: var(--text);
-  font: inherit;
-  font-size: 12.5px;
+	max-width: 260px;
+	padding: 6px 10px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--panel);
+	color: var(--text);
+	font: inherit;
+	font-size: 12.5px;
 }
 
 .picker__select:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
 }
 
 .notice--hit {
-  border-color: #7a5c1e;
+	border-color: #7a5c1e;
 }
 
 .notice--hit .notice__title {
-  font-size: 26px;
-  letter-spacing: 0.08em;
-  color: #ffd479;
+	font-size: 26px;
+	letter-spacing: 0.08em;
+	color: #ffd479;
 }
 
 /* Buttons */
 .app__actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+	display: flex;
+	gap: 10px;
+	align-items: center;
 }
 
 .btn {
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--panel);
-  color: var(--text);
-  font: inherit;
-  font-size: 12.5px;
-  cursor: pointer;
+	padding: 6px 12px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--panel);
+	color: var(--text);
+	font: inherit;
+	font-size: 12.5px;
+	cursor: pointer;
 }
 
 .btn:hover {
-  border-color: #3a3e47;
+	border-color: #3a3e47;
 }
 
 .btn--primary {
-  border-color: #2f4f7a;
-  color: var(--accent);
+	border-color: #2f4f7a;
+	color: var(--accent);
 }
 
 .btn--warn {
-  border-color: #6b5320;
-  color: #ffc978;
+	border-color: #6b5320;
+	color: #ffc978;
 }
 
 /* Panels */
 .app__panels {
-  display: grid;
-  grid-template-columns: minmax(300px, 1fr) 2fr;
-  gap: 8px;
-  align-items: start;
+	display: grid;
+	grid-template-columns: minmax(300px, 1fr) 2fr;
+	gap: 8px;
+	align-items: start;
 }
 
 @media (max-width: 860px) {
-  .app__panels {
-    grid-template-columns: 1fr;
-  }
+	.app__panels {
+		grid-template-columns: 1fr;
+	}
 }
 
 /* Gesture calibration */
 .gesture {
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--panel);
+	padding: 10px 12px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--panel);
 }
 
 .gesture__head {
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-  justify-content: space-between;
+	display: flex;
+	gap: 10px;
+	align-items: baseline;
+	justify-content: space-between;
 }
 
 .gesture__title {
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
+	font-size: 10.5px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--muted);
 }
 
 .gesture__state {
-  font-size: 11.5px;
-  color: var(--muted);
+	font-size: 11.5px;
+	color: var(--muted);
 }
 
 .gesture__state.is-ok {
-  color: #7ee2a8;
+	color: #7ee2a8;
 }
 
 .gesture__meter {
-  position: relative;
-  height: 6px;
-  margin: 8px 0;
-  border-radius: 3px;
-  background: #23262c;
-  overflow: hidden;
+	position: relative;
+	height: 6px;
+	margin: 8px 0;
+	border-radius: 3px;
+	background: #23262c;
+	overflow: hidden;
 }
 
 .gesture__meter-fill,
 .gesture__meter-hold {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
 }
 
 .gesture__meter-fill {
-  background: var(--accent);
-  opacity: 0.5;
+	background: var(--accent);
+	opacity: 0.5;
 }
 
 .gesture__meter-hold {
-  background: #7ee2a8;
+	background: #7ee2a8;
 }
 
 .gesture__table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11.5px;
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 11.5px;
 }
 
 .gesture__table td {
-  padding: 3px 0;
-  color: var(--muted);
+	padding: 3px 0;
+	color: var(--muted);
 }
 
 .gesture__table tr.is-pass td {
-  color: var(--text);
+	color: var(--text);
 }
 
 .gesture__num {
-  width: 3.4em;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+	width: 3.4em;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
 }
 
 .gesture__limit {
-  width: 6em;
-  text-align: right;
-  opacity: 0.6;
+	width: 6em;
+	text-align: right;
+	opacity: 0.6;
 }
 
 .gesture__hint {
-  margin: 8px 0 0;
-  font-size: 10.5px;
-  line-height: 1.45;
-  color: var(--muted);
-  opacity: 0.75;
+	margin: 8px 0 0;
+	font-size: 10.5px;
+	line-height: 1.45;
+	color: var(--muted);
+	opacity: 0.75;
 }
 
 /* ---- ON BLAST punch-in ----------------------------------------------------
    Total duration matches HIT_VISIBLE_MS in App.tsx. The element is remounted
    with a new key on every hit, so the animation replays from zero. */
 .hit {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-  z-index: 3;
-  animation: hit-veil 1500ms ease-out forwards;
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	pointer-events: none;
+	z-index: 3;
+	animation: hit-veil 1500ms ease-out forwards;
 }
 
 .hit__card {
-  padding: 18px 42px;
-  border: 3px solid #ffd479;
-  border-radius: 10px;
-  background: rgba(24, 18, 4, 0.82);
-  box-shadow:
-    0 0 0 6px rgba(255, 212, 121, 0.14),
-    0 18px 60px rgba(0, 0, 0, 0.6);
-  animation: hit-punch 1500ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	padding: 18px 42px;
+	border: 3px solid #ffd479;
+	border-radius: 10px;
+	background: rgba(24, 18, 4, 0.82);
+	box-shadow:
+		0 0 0 6px rgba(255, 212, 121, 0.14),
+		0 18px 60px rgba(0, 0, 0, 0.6);
+	animation: hit-punch 1500ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .hit__text {
-  display: block;
-  color: #ffd479;
-  font-size: clamp(30px, 7vw, 68px);
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  line-height: 1;
-  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.45);
+	display: block;
+	color: #ffd479;
+	font-size: clamp(30px, 7vw, 68px);
+	font-weight: 800;
+	letter-spacing: 0.1em;
+	line-height: 1;
+	text-shadow: 0 3px 0 rgba(0, 0, 0, 0.45);
 }
 
 /* Overshoot on entry, settle, then fall away. */
 @keyframes hit-punch {
-  0%   { transform: scale(0.3) rotate(-9deg); opacity: 0; }
-  12%  { transform: scale(1.18) rotate(3deg); opacity: 1; }
-  22%  { transform: scale(0.96) rotate(-1.5deg); }
-  30%  { transform: scale(1) rotate(0deg); }
-  72%  { transform: scale(1) rotate(0deg); opacity: 1; }
-  100% { transform: scale(1.1) translateY(-14px); opacity: 0; }
+	0% {
+		transform: scale(0.3) rotate(-9deg);
+		opacity: 0;
+	}
+	12% {
+		transform: scale(1.18) rotate(3deg);
+		opacity: 1;
+	}
+	22% {
+		transform: scale(0.96) rotate(-1.5deg);
+	}
+	30% {
+		transform: scale(1) rotate(0deg);
+	}
+	72% {
+		transform: scale(1) rotate(0deg);
+		opacity: 1;
+	}
+	100% {
+		transform: scale(1.1) translateY(-14px);
+		opacity: 0;
+	}
 }
 
 @keyframes hit-veil {
-  0%   { background: rgba(16, 17, 20, 0); }
-  12%  { background: rgba(16, 17, 20, 0.45); }
-  72%  { background: rgba(16, 17, 20, 0.45); }
-  100% { background: rgba(16, 17, 20, 0); }
+	0% {
+		background: rgba(16, 17, 20, 0);
+	}
+	12% {
+		background: rgba(16, 17, 20, 0.45);
+	}
+	72% {
+		background: rgba(16, 17, 20, 0.45);
+	}
+	100% {
+		background: rgba(16, 17, 20, 0);
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hit__card,
-  .hit {
-    animation-duration: 1500ms;
-    animation-timing-function: ease;
-  }
-  @keyframes hit-punch {
-    0%, 100% { transform: none; opacity: 0; }
-    10%, 72% { transform: none; opacity: 1; }
-  }
+	.hit__card,
+	.hit {
+		animation-duration: 1500ms;
+		animation-timing-function: ease;
+	}
+	@keyframes hit-punch {
+		0%,
+		100% {
+			transform: none;
+			opacity: 0;
+		}
+		10%,
+		72% {
+			transform: none;
+			opacity: 1;
+		}
+	}
 }
 
 /* Cooldown bar: shows the trigger is disarmed and for how long. */
 .gesture__meter-cooldown {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  background: #ffc978;
-  opacity: 0.55;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	background: #ffc978;
+	opacity: 0.55;
 }
 
 .gesture__meter-lift {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  background: #c58cf5;
-  transition: width 90ms linear;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	background: #c58cf5;
+	transition: width 90ms linear;
 }
 
 .app__panels {
-  grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr) 1.6fr;
+	grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr) 1.6fr;
 }
 
 @media (max-width: 1100px) {
-  .app__panels {
-    grid-template-columns: 1fr;
-  }
+	.app__panels {
+		grid-template-columns: 1fr;
+	}
+}
+
+.gesture__note {
+	display: inline-block;
+	min-width: 3.4em;
+	padding: 1px 8px;
+	border-radius: 5px;
+	background: rgba(197, 140, 245, 0.16);
+	color: #d6b0ff;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	text-align: center;
 }

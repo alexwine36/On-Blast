@@ -1,22 +1,22 @@
 /** Normalized to the frame: x and y in 0..1, z relative depth (smaller = nearer). */
 export interface HandLandmark {
-  x: number;
-  y: number;
-  z: number;
+	x: number;
+	y: number;
+	z: number;
 }
 
 export interface Hand {
-  /** 21 landmarks in MediaPipe's canonical order. */
-  landmarks: HandLandmark[];
-  handedness: string;
-  /** Classified gesture, e.g. "Open_Palm", "Closed_Fist", "None". */
-  gesture: string;
-  gestureScore: number;
+	/** 21 landmarks in MediaPipe's canonical order. */
+	landmarks: HandLandmark[];
+	handedness: string;
+	/** Classified gesture, e.g. "Open_Palm", "Closed_Fist", "None". */
+	gesture: string;
+	gestureScore: number;
 }
 
 export interface HandFrame {
-  hands: Hand[];
-  inferenceMs: number;
+	hands: Hand[];
+	inferenceMs: number;
 }
 
 /**
@@ -26,7 +26,7 @@ export interface HandFrame {
  * rather than returning a promise.
  */
 export interface HandDetector {
-  readonly backend: string;
-  detect(video: HTMLVideoElement, timestampMs: number): HandFrame;
-  close(): void;
+	readonly backend: string;
+	detect(video: HTMLVideoElement, timestampMs: number): HandFrame;
+	close(): void;
 }

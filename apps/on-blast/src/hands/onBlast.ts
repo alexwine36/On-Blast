@@ -1,6 +1,6 @@
+import type { History } from "../util/history";
 import { palmSpan } from "./landmarks";
 import type { HandFrame } from "./types";
-import type { History } from "../util/history";
 
 export const OPEN_PALM = "Open_Palm";
 
@@ -88,12 +88,9 @@ export function detectOnBlast(
 	// Compare the current mean span against the same measure one window ago.
 	const past = history.before(config.approachWindowMs, now);
 	const meanSpan = (f: HandFrame) =>
-		f.hands.length
-			? f.hands.reduce((s, h) => s + palmSpan(h), 0) / f.hands.length
-			: 0;
+		f.hands.length ? f.hands.reduce((s, h) => s + palmSpan(h), 0) / f.hands.length : 0;
 	const nowSpan = meanSpan(frame);
-	const thenSpan =
-		past && past.item.hands.length >= 2 ? meanSpan(past.item) : 0;
+	const thenSpan = past && past.item.hands.length >= 2 ? meanSpan(past.item) : 0;
 	const approach = thenSpan > 0.01 ? nowSpan / thenSpan : 1;
 
 	const base = {
@@ -115,8 +112,7 @@ export function detectOnBlast(
 		// Holding still settles `approach` back to ~1, which releases the gate —
 		// that is what stops a held pose from repeating.
 		if (!bigEnough) return { ...base, ok: false, reason: "bring hands closer" };
-		if (!approaching)
-			return { ...base, ok: false, reason: "thrust them forward" };
+		if (!approaching) return { ...base, ok: false, reason: "thrust them forward" };
 		return { ...base, ok: true, reason: "thrust" };
 	}
 

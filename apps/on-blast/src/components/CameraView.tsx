@@ -1,11 +1,11 @@
 import type { ReactNode, RefObject } from "react";
 
 interface CameraViewProps {
-  videoRef: RefObject<HTMLVideoElement | null>;
-  canvasRef: RefObject<HTMLCanvasElement | null>;
-  notice?: ReactNode;
-  /** Transient effects drawn above everything, e.g. the hit punch-in. */
-  overlay?: ReactNode;
+	videoRef: RefObject<HTMLVideoElement | null>;
+	canvasRef: RefObject<HTMLCanvasElement | null>;
+	notice?: ReactNode;
+	/** Transient effects drawn above everything, e.g. the hit punch-in. */
+	overlay?: ReactNode;
 }
 
 /**
@@ -17,12 +17,12 @@ interface CameraViewProps {
  * loop reproduces that fit so the overlay lines up.
  */
 export function CameraView({ videoRef, canvasRef, notice, overlay }: CameraViewProps) {
-  return (
-    <div className="stage">
-      <video ref={videoRef} className="stage__video" autoPlay playsInline muted />
-      <canvas ref={canvasRef} className="stage__overlay" />
-      {notice ? <div className="stage__notice">{notice}</div> : null}
-      {overlay}
-    </div>
-  );
+	return (
+		<div className="stage">
+			<video ref={videoRef} className="stage__video" autoPlay playsInline muted />
+			<canvas ref={canvasRef} className="stage__overlay" />
+			{notice ? <div className="stage__notice">{notice}</div> : null}
+			{overlay}
+		</div>
+	);
 }
