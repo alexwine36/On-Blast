@@ -1,52 +1,28 @@
 #!/usr/bin/env bash
-# Downloads the pose model and the ONNX Runtime Web build into public/.
+# Stages the MediaPipe wasm runtime and models into public/.
 # Both are git-ignored; this script is the source of truth for them.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-MODEL_RELEASE="https://github.com/ultralytics/assets/releases/download/v8.4.0"
-MODEL="yolo26n-pose.onnx"
-ORT_BASE="https://cdn.pyke.io/0/pyke:ort-rs/web@1.27.0"
+MODEL_BASE="https://storage.googleapis.com/mediapipe-models"
 
-# The ORT loader applies hardcoded SRI hashes, so these must be byte-exact
-# mirrors. Both backends are vendored: we can't know which one engages, and the
-# CPU build is also the WebGPU fallback path.
-# NOTE: the `asyncify` pair is required by the WebGPU execution provider and is
-# NOT listed in the package's `ortBaseUrl` doc comment (only the README's
-# `{jsep,asyncify,}` brace expansion hints at it). Omitting it fails at model
-# load with "no available backend found".
-ORT_FILES=(
-  "ort.webgpu.min.js"
-  "ort-wasm-simd-threaded.jsep.wasm"
-  "ort-wasm-simd-threaded.jsep.mjs"
-  "ort-wasm-simd-threaded.asyncify.wasm"
-  "ort-wasm-simd-threaded.asyncify.mjs"
-  "ort.wasm.min.js"
-  "ort-wasm-simd-threaded.wasm"
-  "ort-wasm-simd-threaded.mjs"
-)
+mkdir -p public/mediapipe/wasm public/mediapipe/models
 
-mkdir -p public/models public/ort
+# The wasm runtime ships inside the npm package — copy rather than download so
+# it can never drift from the JS that loads it.
+echo "==> mediapipe wasm runtime (from node_modules)"
+if [ ! -d node_modules/@mediapipe/tasks-vision/wasm ]; then
+  echo "    node_modules missing; run 'bun install' first" >&2
+  exit 1
+fi
+cp node_modules/@mediapipe/tasks-vision/wasm/* public/mediapipe/wasm/
 
-echo "==> $MODEL"
-curl -fsSL -o "public/models/$MODEL" "$MODEL_RELEASE/$MODEL"
-
-for f in "${ORT_FILES[@]}"; do
-  echo "==> $f"
-  curl -fsSL -o "public/ort/$f" "$ORT_BASE/$f"
-done
+echo "==> gesture_recognizer.task"
+curl -fsSL -o public/mediapipe/models/gesture_recognizer.task \
+  "$MODEL_BASE/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task"
 
 echo
 echo "Done. Expected sizes:"
-cat <<'SIZES'
-  12125856  public/models/yolo26n-pose.onnx
-     67237  public/ort/ort.webgpu.min.js
-  26827543  public/ort/ort-wasm-simd-threaded.jsep.wasm
-     46614  public/ort/ort-wasm-simd-threaded.jsep.mjs
-  24254953  public/ort/ort-wasm-simd-threaded.asyncify.wasm
-     47507  public/ort/ort-wasm-simd-threaded.asyncify.mjs
-     50139  public/ort/ort.wasm.min.js
-  13479978  public/ort/ort-wasm-simd-threaded.wasm
-     24180  public/ort/ort-wasm-simd-threaded.mjs
-SIZES
+echo "   8373440  public/mediapipe/models/gesture_recognizer.task"
+echo "     ~34M   public/mediapipe/wasm/"

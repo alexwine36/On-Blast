@@ -1,10 +1,16 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CameraPicker } from "./components/CameraPicker";
-import { PoseView } from "./components/PoseView";
+import { GestureHud } from "./components/GestureHud";
+import { HitOverlay } from "./components/HitOverlay";
+import { ShoulderHud } from "./components/ShoulderHud";
+import type { PostureMetrics } from "./body/posture";
+import { CameraView } from "./components/CameraView";
 import { StatsHud } from "./components/StatsHud";
+import { useAudioEngine } from "./hooks/useAudioEngine";
 import { useCamera } from "./hooks/useCamera";
-import { usePoseDetector } from "./hooks/usePoseDetector";
-import { usePoseLoop } from "./hooks/usePoseLoop";
+import { useBodyDetector } from "./hooks/useBodyDetector";
+import { useHandDetector } from "./hooks/useHandDetector";
+import { useVisionLoop } from "./hooks/useVisionLoop";
 import "./App.css";
 
 interface Notice {
@@ -13,11 +19,50 @@ interface Notice {
   detail?: string;
 }
 
+/** How long the punch-in stays up. Matches the CSS animation duration. */
+const HIT_VISIBLE_MS = 1500;
+
 function App() {
   const [deviceId, setDeviceId] = useState<string | undefined>(undefined);
+  // Increments on every hit; used as the overlay's key so its animation replays.
+  const [hitId, setHitId] = useState(0);
+  const [hitVisible, setHitVisible] = useState(false);
+
   const camera = useCamera(deviceId);
-  const model = usePoseDetector();
-  const { videoRef, canvasRef, stats } = usePoseLoop(model.detector, camera.stream);
+  const model = useHandDetector();
+  const body = useBodyDetector();
+  const audio = useAudioEngine();
+
+  const handleTrigger = useCallback(() => {
+    audio.playSting();
+    setHitId((n) => n + 1);
+    setHitVisible(true);
+  }, [audio]);
+
+  // Auto-hide. Keyed on hitId so a hit landing while one is showing restarts
+  // the timer rather than being cut short by the previous one.
+  useEffect(() => {
+    if (!hitVisible) return;
+    const id = setTimeout(() => setHitVisible(false), HIT_VISIBLE_MS);
+    return () => clearTimeout(id);
+  }, [hitId, hitVisible]);
+
+  // Shoulder height drives the drone pitch; arms-out is the gate that sounds it.
+  const handlePosture = useCallback(
+    (posture: PostureMetrics) => {
+      audio.setDrone(posture.armsOut, posture.lift);
+    },
+    [audio],
+  );
+
+  const { videoRef, canvasRef, stats, reset } = useVisionLoop({
+    detector: model.detector,
+    bodyDetector: body.detector,
+    stream: camera.stream,
+    active: true,
+    onTrigger: handleTrigger,
+    onPosture: handlePosture,
+  });
 
   // Camera problems come first — without a picture, the model doesn't matter.
   let notice: Notice | null = null;
@@ -26,16 +71,12 @@ function App() {
   } else if (camera.status === "starting") {
     notice = { tone: "info", title: "Waiting for the camera…" };
   } else if (model.status === "error") {
-    notice = {
-      tone: "error",
-      title: "Could not load the pose model",
-      detail: model.error ?? undefined,
-    };
+    notice = { tone: "error", title: "Could not load the hand model", detail: model.error ?? undefined };
   } else if (model.status === "loading") {
     notice = {
       tone: "info",
-      title: "Loading pose model…",
-      detail: "First run initializes the ONNX Runtime wasm build.",
+      title: "Loading hand model…",
+      detail: "First run initializes the MediaPipe wasm runtime.",
     };
   }
 
@@ -45,15 +86,25 @@ function App() {
         <h1 className="app__title">
           on&#8209;blast <span className="app__subtitle">pose</span>
         </h1>
-        <CameraPicker
-          devices={camera.devices}
-          value={deviceId}
-          onChange={setDeviceId}
-          disabled={camera.status === "starting"}
-        />
+        <div className="app__actions">
+          {audio.status === "blocked" ? (
+            <button className="btn btn--warn" onClick={() => void audio.unlock()}>
+              Enable sound
+            </button>
+          ) : null}
+          <button className="btn" onClick={reset}>
+            Reset
+          </button>
+          <CameraPicker
+            devices={camera.devices}
+            value={deviceId}
+            onChange={setDeviceId}
+            disabled={camera.status === "starting"}
+          />
+        </div>
       </header>
 
-      <PoseView
+      <CameraView
         videoRef={videoRef}
         canvasRef={canvasRef}
         notice={
@@ -64,9 +115,18 @@ function App() {
             </div>
           ) : null
         }
+        overlay={hitVisible ? <HitOverlay key={hitId} /> : null}
       />
 
-      <StatsHud stats={stats} ready={model.status === "ready"} />
+      <div className="app__panels">
+        <GestureHud
+          metrics={stats.metrics}
+          holdProgress={stats.holdProgress}
+          cooldown={stats.cooldown}
+        />
+        <ShoulderHud posture={stats.posture} />
+        <StatsHud stats={stats} ready={model.status === "ready"} stingSource={audio.source} />
+      </div>
     </main>
   );
 }

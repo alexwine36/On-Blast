@@ -1,16 +1,12 @@
-import type { PoseStats } from "../hooks/usePoseLoop";
+import type { VisionStats } from "../hooks/useVisionLoop";
 
 interface StatsHudProps {
-  stats: PoseStats;
+  stats: VisionStats;
   ready: boolean;
+  stingSource: "sample" | "synth";
 }
 
-/**
- * The diagnostic that answers the open question: whether WebGPU engaged inside
- * the macOS webview, or we fell back to CPU/wasm. WebGPU on a nano pose model
- * lands around 8-20 ms; CPU/wasm around 80-300 ms.
- */
-export function StatsHud({ stats, ready }: StatsHudProps) {
+export function StatsHud({ stats, ready, stingSource }: StatsHudProps) {
   const backendKnown = ready && stats.backend !== "—";
 
   return (
@@ -18,28 +14,38 @@ export function StatsHud({ stats, ready }: StatsHudProps) {
       <div className="hud__item">
         <dt>Backend</dt>
         <dd>
-          <span
-            className={`hud__badge hud__badge--${backendKnown ? stats.backend : "pending"}`}
-          >
+          <span className={`hud__badge hud__badge--${backendKnown ? stats.backend : "pending"}`}>
             {backendKnown ? stats.backend : "…"}
           </span>
         </dd>
       </div>
       <div className="hud__item">
-        <dt>Inference</dt>
-        <dd>{stats.inferenceMs > 0 ? `${stats.inferenceMs.toFixed(1)} ms` : "—"}</dd>
+        <dt>Hands / body</dt>
+        <dd>
+          {stats.inferenceMs > 0 ? `${stats.inferenceMs.toFixed(0)}` : "—"}
+          {" / "}
+          {stats.bodyMs > 0 ? `${stats.bodyMs.toFixed(0)} ms` : "— ms"}
+        </dd>
       </div>
       <div className="hud__item">
-        <dt>Inference rate</dt>
-        <dd>{stats.inferenceFps} fps</dd>
+        <dt>Detect rate</dt>
+        <dd>{stats.detectFps} fps</dd>
       </div>
       <div className="hud__item">
         <dt>Render</dt>
         <dd>{stats.renderFps} fps</dd>
       </div>
       <div className="hud__item">
-        <dt>People</dt>
-        <dd>{stats.people}</dd>
+        <dt>Hands</dt>
+        <dd>{stats.metrics.handsSeen}</dd>
+      </div>
+      <div className="hud__item">
+        <dt>Sting</dt>
+        <dd>
+          <span className={`hud__badge hud__badge--${stingSource === "sample" ? "webgpu" : "cpu"}`}>
+            {stingSource}
+          </span>
+        </dd>
       </div>
     </dl>
   );

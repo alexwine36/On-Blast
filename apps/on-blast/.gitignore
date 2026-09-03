@@ -4,6 +4,5 @@ dist-ssr
 *.local
 .DS_Store
 
-# Downloaded by `bun run setup:assets` — ~52 MB of model + ONNX Runtime binaries.
-public/models/
-public/ort/
+# Downloaded/copied by `bun run setup:assets` — MediaPipe wasm runtime + model.
+public/mediapipe/

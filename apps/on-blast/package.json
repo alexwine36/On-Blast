@@ -11,9 +11,9 @@
     "setup:assets": "bash scripts/fetch-assets.sh"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
-    "@ultralytics/yolo": "^0.0.41",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
