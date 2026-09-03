@@ -495,3 +495,40 @@ body {
 	color: var(--muted);
 	font-size: 10.5px;
 }
+
+/* ---- Narrow screens -------------------------------------------------------
+   The desktop layout pins everything to the viewport and lets the stage absorb
+   the slack. On a phone the panels stack into one tall column, so the stage —
+   the only flexible item — collapses to nothing. Let the page scroll instead
+   and give the stage a floor. */
+@media (max-width: 720px) {
+	html,
+	body,
+	#root {
+		height: auto;
+		min-height: 100%;
+	}
+
+	.app {
+		height: auto;
+		min-height: 100%;
+		padding: 12px;
+		gap: 12px;
+	}
+
+	.stage {
+		flex: 0 0 auto;
+		/* object-fit: contain means a generous box only adds letterbox, never
+		   crops, so a floor is safer than guessing the camera's aspect. */
+		min-height: 52vh;
+		max-height: none;
+	}
+
+	.app__bar {
+		gap: 8px;
+	}
+
+	.hud__item {
+		flex-basis: calc(50% - 4px);
+	}
+}
