@@ -53,7 +53,11 @@ export function OnBlast({ assetBase, features }: OnBlastProps = {}) {
 		{ wasmPath: assets.wasmPath, modelPath: assets.bodyModel },
 		flags.armPhrase,
 	);
-	const audio = useAudioEngine({ stingUrl: assets.sting, voiceUrl: assets.voice });
+	const audio = useAudioEngine({
+		stingUrl: assets.sting,
+		voiceUrl: assets.voice,
+		phraseUrl: assets.phrase,
+	});
 
 	/**
 	 * The phrase fires once per ON BLAST.
@@ -185,6 +189,7 @@ export function OnBlast({ assetBase, features }: OnBlastProps = {}) {
 				) : null}
 				<StatsHud
 					bodyError={body.error}
+					phraseSource={audio.phraseSource}
 					phraseArmed={armed}
 					stats={stats}
 					ready={model.status === "ready"}

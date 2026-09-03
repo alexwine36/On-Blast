@@ -7,6 +7,7 @@ export function useAudioEngine(options: AudioEngineOptions) {
 	const [status, setStatus] = useState<AudioStatus>("idle");
 	const [source, setSource] = useState<"sample" | "synth">("synth");
 	const [toneSource, setToneSource] = useState<"sample" | "synth">("synth");
+	const [phraseSource, setPhraseSource] = useState<"clip" | "notes">("notes");
 	const [note, setNote] = useState<string | null>(null);
 
 	// The engine is built once for the lifetime of the app.
@@ -28,6 +29,7 @@ export function useAudioEngine(options: AudioEngineOptions) {
 			setStatus(engine.status);
 			setSource(engine.source);
 			setToneSource(engine.toneSource);
+			setPhraseSource(engine.phraseSource);
 		}, 500);
 		// The note changes far faster than the status poll, so sample it tighter.
 		const notePoll = setInterval(() => setNote(engine.currentNote), 80);
@@ -47,6 +49,7 @@ export function useAudioEngine(options: AudioEngineOptions) {
 		source,
 		note,
 		toneSource,
+		phraseSource,
 		keyName: engineRef.current?.keyName ?? "",
 		tempoLabel: engineRef.current?.tempoLabel ?? "",
 		playSting: () => engineRef.current?.playSting(),

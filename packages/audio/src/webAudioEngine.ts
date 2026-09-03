@@ -73,6 +73,15 @@ export interface AudioEngineOptions {
 	 * formants. Null falls back to the oscillator voice.
 	 */
 	voiceUrl?: string | null;
+	/**
+	 * The original phrase recording, played whole.
+	 *
+	 * Preferred over re-sequencing it note by note: the room tone that reads as
+	 * crowd noise in a loop is just ambience when played once, and it is a
+	 * large part of why the source sounds alive. Null falls back to the
+	 * note-by-note rendering.
+	 */
+	phraseUrl?: string | null;
 }
 /**
  * Measured pitch of the grain, and the reference for every transposition.
@@ -85,6 +94,7 @@ const VOICE_BASE_FREQ = 439.2;
 export function createWebAudioEngine({
 	stingUrl = null,
 	voiceUrl = null,
+	phraseUrl = null,
 }: AudioEngineOptions = {}): AudioEngine {
 	const ctx = new AudioContext();
 	const master = ctx.createGain();
@@ -160,6 +170,17 @@ export function createWebAudioEngine({
 	 *  rather than retriggered, so stepping notes never clicks. */
 	let voiceSource: AudioBufferSourceNode | null = null;
 	let voiceBuffer: AudioBuffer | null = null;
+	let phraseBuffer: AudioBuffer | null = null;
+
+	if (phraseUrl) {
+		void fetch(phraseUrl)
+			.then((r) => r.arrayBuffer())
+			.then((b) => ctx.decodeAudioData(b))
+			.then((buf) => {
+				phraseBuffer = buf;
+			})
+			.catch((err) => console.error("[audio] phrase clip failed to load", err));
+	}
 
 	if (voiceUrl) {
 		void fetch(voiceUrl)
@@ -312,6 +333,20 @@ export function createWebAudioEngine({
 
 	function playPhrase(phrase: Phrase): void {
 		if (ctx.state !== "running") void ctx.resume();
+
+		// The real recording, when we have it. Nothing synthesised matches a
+		// take that already carries its own room.
+		if (phraseBuffer) {
+			const src = ctx.createBufferSource();
+			src.buffer = phraseBuffer;
+			const g = ctx.createGain();
+			g.gain.value = PHRASE_CLIP_LEVEL;
+			src.connect(g);
+			g.connect(master);
+			src.start();
+			return;
+		}
+
 		const t0 = ctx.currentTime + 0.02;
 		for (const note of phrase.notes) {
 			const freq = midiToFreq(note.midi);
@@ -388,6 +423,7 @@ export function createWebAudioEngine({
 	/** Phrase voice. Mild drive: grit, not fuzz. */
 	const PHRASE_DRIVE = 2.6;
 	const PHRASE_LEVEL = 0.17;
+	const PHRASE_CLIP_LEVEL = 0.85;
 	const PHRASE_ENV = { attack: 0.006, decay: 0.09, sustain: 0.62, release: 0.12 };
 
 	/** tanh soft-clip. Saturates rather than hard-clipping, so it grits up
@@ -520,6 +556,9 @@ export function createWebAudioEngine({
 	}
 
 	return {
+		get phraseSource(): "clip" | "notes" {
+			return phraseBuffer ? "clip" : "notes";
+		},
 		get toneSource(): "sample" | "synth" {
 			return voiceSource ? "sample" : "synth";
 		},

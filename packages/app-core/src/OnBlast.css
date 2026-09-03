@@ -489,3 +489,9 @@ body {
 	font-variant-numeric: tabular-nums;
 	text-align: center;
 }
+
+.hud__sub {
+	margin-left: 6px;
+	color: var(--muted);
+	font-size: 10.5px;
+}

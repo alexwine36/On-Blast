@@ -44,7 +44,7 @@ curl -fsSL -o "$DEST/mediapipe/models/pose_landmarker_lite.task" \
 # Audio. The sting is licensed and git-ignored, so it is present locally and
 # absent in CI — the engine falls back to its synthesized sting either way.
 echo "==> audio"
-for f in "$ROOT"/packages/app-core/assets/audio/*.wav; do
+for f in "$ROOT"/packages/app-core/assets/audio/*.wav "$ROOT"/packages/app-core/assets/audio/*.mp3; do
   [ -e "$f" ] || continue
   cp "$f" "$DEST/audio/"
 done

@@ -6,11 +6,20 @@ interface StatsHudProps {
 	stingSource: "sample" | "synth";
 	/** False once the phrase has played; only an ON BLAST re-arms it. */
 	phraseArmed: boolean;
+	/** "clip" = the original recording; "notes" = the re-sequenced fallback. */
+	phraseSource: "clip" | "notes";
 	/** Set when the body model failed to load, e.g. it was never staged. */
 	bodyError?: string | null;
 }
 
-export function StatsHud({ stats, ready, stingSource, phraseArmed, bodyError }: StatsHudProps) {
+export function StatsHud({
+	stats,
+	ready,
+	stingSource,
+	phraseArmed,
+	phraseSource,
+	bodyError,
+}: StatsHudProps) {
 	const backendKnown = ready && stats.backend !== "—";
 
 	return (
@@ -53,6 +62,7 @@ export function StatsHud({ stats, ready, stingSource, phraseArmed, bodyError }: 
 					<span className={`hud__badge hud__badge--${phraseArmed ? "webgpu" : "cpu"}`}>
 						{phraseArmed ? "armed" : "spent"}
 					</span>
+					<span className="hud__sub">{phraseSource}</span>
 				</dd>
 			</div>
 			<div className="hud__item">

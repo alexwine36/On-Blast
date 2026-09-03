@@ -36,5 +36,7 @@ export interface AudioEngine {
 	readonly tempoLabel: string;
 	/** Whether the shoulder tone is the vocal sample or the synth fallback. */
 	readonly toneSource: "sample" | "synth";
+	/** Whether the phrase plays the original recording or a note sequence. */
+	readonly phraseSource: "clip" | "notes";
 	dispose(): void;
 }

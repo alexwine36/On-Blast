@@ -11,6 +11,7 @@ export interface AssetUrls {
 	handModel: string;
 	bodyModel: string;
 	sting: string;
+	phrase: string;
 	voice: string;
 }
 
@@ -22,6 +23,7 @@ export function resolveAssets(base?: string): AssetUrls {
 		handModel: `${b}mediapipe/models/gesture_recognizer.task`,
 		bodyModel: `${b}mediapipe/models/pose_landmarker_lite.task`,
 		sting: `${b}audio/sting.wav`,
+		phrase: `${b}audio/phrase.mp3`,
 		voice: `${b}audio/voice-a4.wav`,
 	};
 }
