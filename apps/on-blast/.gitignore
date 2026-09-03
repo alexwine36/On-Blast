@@ -6,3 +6,8 @@ dist-ssr
 
 # Downloaded/copied by `bun run setup:assets` — MediaPipe wasm runtime + model.
 public/mediapipe/
+
+# SNL-derived audio — local prototype only, must not reach a public repo.
+# The engine falls back to the synthesized sting when these are absent.
+public/audio/sting.wav
+public/audio/sting-source.m4a
