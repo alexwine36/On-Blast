@@ -18,9 +18,12 @@ function classify(err: unknown): CameraError {
 	if (name === "NotAllowedError" || name === "SecurityError") {
 		return {
 			kind: "denied",
+			// app-core runs in a browser and inside Tauri, so this must not
+			// assume either. The Tauri-specific hint that used to live here was
+			// being shown to visitors on the public site.
 			message:
-				"Camera access was denied. In dev, macOS attributes the request to the terminal that " +
-				"launched the app — grant it camera access under Privacy & Security.",
+				"Camera access was denied. Allow it for this site and reload. " +
+				"On macOS, also check the app has camera permission under Privacy & Security.",
 		};
 	}
 	if (name === "NotFoundError" || name === "OverconstrainedError" || name === "NotReadableError") {
