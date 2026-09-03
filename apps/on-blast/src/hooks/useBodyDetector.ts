@@ -1,13 +1,13 @@
-import type { BodyDetector } from "@on-blast/vision";
+import type { BodyDetector, BodyDetectorOptions } from "@on-blast/vision";
 import { createMediaPipeBodyDetector } from "@on-blast/vision";
 import { useEffect, useState } from "react";
 
 /** Singleton for the same reasons as the hand detector — see useHandDetector. */
 let cached: Promise<BodyDetector> | null = null;
 
-function loadDetector(): Promise<BodyDetector> {
+function loadDetector(options: BodyDetectorOptions): Promise<BodyDetector> {
 	if (!cached) {
-		cached = createMediaPipeBodyDetector().catch((err) => {
+		cached = createMediaPipeBodyDetector(options).catch((err) => {
 			cached = null;
 			throw err;
 		});
@@ -16,14 +16,16 @@ function loadDetector(): Promise<BodyDetector> {
 }
 
 /** Pass `enabled: false` to skip loading the model entirely. */
-export function useBodyDetector(enabled = true) {
+export function useBodyDetector(options: BodyDetectorOptions, enabled = true) {
 	const [detector, setDetector] = useState<BodyDetector | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
+	// Load-once singleton; see useHandDetector.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: load-once
 	useEffect(() => {
 		if (!enabled) return;
 		let cancelled = false;
-		loadDetector().then(
+		loadDetector(options).then(
 			(d) => {
 				if (!cancelled) setDetector(d);
 			},

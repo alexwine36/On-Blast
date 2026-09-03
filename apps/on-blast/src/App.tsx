@@ -1,5 +1,6 @@
 import type { PostureMetrics } from "@on-blast/vision";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { resolveAssets } from "./assets";
 import { CameraPicker } from "./components/CameraPicker";
 import { CameraView } from "./components/CameraView";
 import { GestureHud } from "./components/GestureHud";
@@ -29,10 +30,16 @@ function App() {
 	const [hitId, setHitId] = useState(0);
 	const [hitVisible, setHitVisible] = useState(false);
 
+	// Resolved once from the app's base path; see src/assets.ts.
+	const assets = useMemo(() => resolveAssets(), []);
+
 	const camera = useCamera(deviceId);
-	const model = useHandDetector();
-	const body = useBodyDetector(SHOULDER_SYNTH_ENABLED);
-	const audio = useAudioEngine();
+	const model = useHandDetector({ wasmPath: assets.wasmPath, modelPath: assets.handModel });
+	const body = useBodyDetector(
+		{ wasmPath: assets.wasmPath, modelPath: assets.bodyModel },
+		SHOULDER_SYNTH_ENABLED,
+	);
+	const audio = useAudioEngine({ stingUrl: assets.sting, voiceUrl: assets.voice });
 
 	const handleTrigger = useCallback(() => {
 		audio.playSting();

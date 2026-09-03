@@ -1,24 +1,31 @@
 import { FilesetResolver, PoseLandmarker } from "@mediapipe/tasks-vision";
 import type { BodyDetector, BodyFrame } from "./types";
 
-const WASM_PATH = "/mediapipe/wasm";
-const MODEL_PATH = "/mediapipe/models/pose_landmarker_lite.task";
+export interface BodyDetectorOptions {
+	/** Directory holding the MediaPipe wasm runtime. */
+	wasmPath: string;
+	/** URL of the pose landmarker `.task` bundle. */
+	modelPath: string;
+}
 
 /** Body pose, for shoulder height. Same wasm runtime as the hand model. */
-export async function createMediaPipeBodyDetector(): Promise<BodyDetector> {
-	const fileset = await FilesetResolver.forVisionTasks(WASM_PATH);
+export async function createMediaPipeBodyDetector({
+	wasmPath,
+	modelPath,
+}: BodyDetectorOptions): Promise<BodyDetector> {
+	const fileset = await FilesetResolver.forVisionTasks(wasmPath);
 
 	let landmarker: PoseLandmarker;
 	try {
 		landmarker = await PoseLandmarker.createFromOptions(fileset, {
-			baseOptions: { modelAssetPath: MODEL_PATH, delegate: "GPU" },
+			baseOptions: { modelAssetPath: modelPath, delegate: "GPU" },
 			runningMode: "VIDEO",
 			numPoses: 1,
 		});
 	} catch (err) {
 		console.warn("[body] GPU delegate unavailable, falling back to CPU", err);
 		landmarker = await PoseLandmarker.createFromOptions(fileset, {
-			baseOptions: { modelAssetPath: MODEL_PATH, delegate: "CPU" },
+			baseOptions: { modelAssetPath: modelPath, delegate: "CPU" },
 			runningMode: "VIDEO",
 			numPoses: 1,
 		});

@@ -14,4 +14,5 @@ export {
 } from "./scale";
 export { gridSeconds, TempoGate } from "./tempo";
 export type { AudioEngine, AudioStatus } from "./types";
+export type { AudioEngineOptions } from "./webAudioEngine";
 export { createWebAudioEngine, KEY, NOTE_DIVISION, TEMPO_BPM } from "./webAudioEngine";

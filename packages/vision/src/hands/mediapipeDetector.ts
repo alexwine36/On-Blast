@@ -1,8 +1,14 @@
 import { FilesetResolver, GestureRecognizer } from "@mediapipe/tasks-vision";
 import type { HandDetector, HandFrame } from "./types";
 
-const WASM_PATH = "/mediapipe/wasm";
-const MODEL_PATH = "/mediapipe/models/gesture_recognizer.task";
+export interface HandDetectorOptions {
+	/** Directory holding the MediaPipe wasm runtime. */
+	wasmPath: string;
+	/** URL of the gesture recognizer `.task` bundle. */
+	modelPath: string;
+	/** Hands to track at once. */
+	numHands?: number;
+}
 
 /**
  * The only module that touches MediaPipe (Apache-2.0).
@@ -10,25 +16,29 @@ const MODEL_PATH = "/mediapipe/models/gesture_recognizer.task";
  * Both the wasm runtime and the model are served from `public/`, so nothing is
  * fetched from a CDN at runtime and the app works offline.
  */
-export async function createMediaPipeHandDetector(): Promise<HandDetector> {
-	const fileset = await FilesetResolver.forVisionTasks(WASM_PATH);
+export async function createMediaPipeHandDetector({
+	wasmPath,
+	modelPath,
+	numHands = 2,
+}: HandDetectorOptions): Promise<HandDetector> {
+	const fileset = await FilesetResolver.forVisionTasks(wasmPath);
 
 	let delegate: "GPU" | "CPU" = "GPU";
 	let recognizer: GestureRecognizer;
 	try {
 		recognizer = await GestureRecognizer.createFromOptions(fileset, {
-			baseOptions: { modelAssetPath: MODEL_PATH, delegate: "GPU" },
+			baseOptions: { modelAssetPath: modelPath, delegate: "GPU" },
 			runningMode: "VIDEO",
-			numHands: 2,
+			numHands,
 		});
 	} catch (err) {
 		// Some webviews have no usable WebGL context; the CPU graph still works.
 		console.warn("[hands] GPU delegate unavailable, falling back to CPU", err);
 		delegate = "CPU";
 		recognizer = await GestureRecognizer.createFromOptions(fileset, {
-			baseOptions: { modelAssetPath: MODEL_PATH, delegate: "CPU" },
+			baseOptions: { modelAssetPath: modelPath, delegate: "CPU" },
 			runningMode: "VIDEO",
-			numHands: 2,
+			numHands,
 		});
 	}
 

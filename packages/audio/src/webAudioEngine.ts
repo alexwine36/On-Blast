@@ -55,19 +55,31 @@ const ARTICULATION = {
 	settleTau: 0.035,
 };
 
-/** The real hit, lifted from the sketch. Falls back to the synth if it fails to load. */
 /**
- * A sustained vowel lifted from the "On Blast" vocal and looped seamlessly
- * (period-aligned, crossfaded). Every note is this grain retuned, which is the
- * only way to keep vocal character — no oscillator stack reproduces formants.
+ * Sample URLs, passed in rather than hardcoded.
+ *
+ * A project site is served from a subpath, so an absolute "/audio/..." would
+ * resolve against the domain root and 404 — and only in production, since
+ * both local dev and Tauri serve from "/".
  */
-export const VOICE_SAMPLE_URL: string | null = "/audio/voice-a4.wav";
+export interface AudioEngineOptions {
+	/** The punchline hit. Null falls back to the synthesized sting. */
+	stingUrl?: string | null;
+	/**
+	 * A sustained vowel lifted from the "On Blast" vocal and looped seamlessly
+	 * (period-aligned, crossfaded). Every note is this grain retuned, which is
+	 * the only way to keep vocal character — no oscillator stack reproduces
+	 * formants. Null falls back to the oscillator voice.
+	 */
+	voiceUrl?: string | null;
+}
 /** Measured pitch of that grain; the reference for every transposition. */
 const VOICE_BASE_FREQ = 440; // A4
 
-export const STING_SAMPLE_URL: string | null = "/audio/sting.wav";
-
-export function createWebAudioEngine(): AudioEngine {
+export function createWebAudioEngine({
+	stingUrl = null,
+	voiceUrl = null,
+}: AudioEngineOptions = {}): AudioEngine {
 	const ctx = new AudioContext();
 	const master = ctx.createGain();
 	master.gain.value = 0.7;
@@ -83,8 +95,8 @@ export function createWebAudioEngine(): AudioEngine {
 	limiter.connect(ctx.destination);
 
 	let sample: AudioBuffer | null = null;
-	if (STING_SAMPLE_URL) {
-		void fetch(STING_SAMPLE_URL)
+	if (stingUrl) {
+		void fetch(stingUrl)
 			.then((r) => r.arrayBuffer())
 			.then((b) => ctx.decodeAudioData(b))
 			.then((buf) => {
@@ -142,8 +154,8 @@ export function createWebAudioEngine(): AudioEngine {
 	 *  rather than retriggered, so stepping notes never clicks. */
 	let voiceSource: AudioBufferSourceNode | null = null;
 
-	if (VOICE_SAMPLE_URL) {
-		void fetch(VOICE_SAMPLE_URL)
+	if (voiceUrl) {
+		void fetch(voiceUrl)
 			.then((r) => r.arrayBuffer())
 			.then((b) => ctx.decodeAudioData(b))
 			.then((buf) => {

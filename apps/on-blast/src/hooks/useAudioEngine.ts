@@ -1,16 +1,18 @@
-import type { AudioEngine, AudioStatus } from "@on-blast/audio";
+import type { AudioEngine, AudioEngineOptions, AudioStatus } from "@on-blast/audio";
 import { createWebAudioEngine } from "@on-blast/audio";
 import { useEffect, useRef, useState } from "react";
 
-export function useAudioEngine() {
+export function useAudioEngine(options: AudioEngineOptions) {
 	const engineRef = useRef<AudioEngine | null>(null);
 	const [status, setStatus] = useState<AudioStatus>("idle");
 	const [source, setSource] = useState<"sample" | "synth">("synth");
 	const [toneSource, setToneSource] = useState<"sample" | "synth">("synth");
 	const [note, setNote] = useState<string | null>(null);
 
+	// The engine is built once for the lifetime of the app.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: load-once
 	useEffect(() => {
-		const engine = createWebAudioEngine();
+		const engine = createWebAudioEngine(options);
 		engineRef.current = engine;
 		setStatus(engine.status);
 

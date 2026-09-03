@@ -1,4 +1,4 @@
-import type { HandDetector } from "@on-blast/vision";
+import type { HandDetector, HandDetectorOptions } from "@on-blast/vision";
 import { createMediaPipeHandDetector } from "@on-blast/vision";
 import { useEffect, useState } from "react";
 
@@ -13,9 +13,9 @@ export type DetectorStatus = "loading" | "ready" | "error";
  */
 let cached: Promise<HandDetector> | null = null;
 
-function loadDetector(): Promise<HandDetector> {
+function loadDetector(options: HandDetectorOptions): Promise<HandDetector> {
 	if (!cached) {
-		cached = createMediaPipeHandDetector().catch((err) => {
+		cached = createMediaPipeHandDetector(options).catch((err) => {
 			cached = null; // don't cache a failure; let a remount retry
 			throw err;
 		});
@@ -23,14 +23,17 @@ function loadDetector(): Promise<HandDetector> {
 	return cached;
 }
 
-export function useHandDetector() {
+export function useHandDetector(options: HandDetectorOptions) {
 	const [detector, setDetector] = useState<HandDetector | null>(null);
 	const [status, setStatus] = useState<DetectorStatus>("loading");
 	const [error, setError] = useState<string | null>(null);
 
+	// The detector is a process-wide singleton: options are read once on the
+	// first load, so a later change would not reload it.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: load-once
 	useEffect(() => {
 		let cancelled = false;
-		loadDetector().then(
+		loadDetector(options).then(
 			(d) => {
 				if (cancelled) return;
 				setDetector(d);
