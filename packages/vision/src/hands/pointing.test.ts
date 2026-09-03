@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { DEFAULT_POINTING, detectPointing, POINTING_UP, toUserHand } from "./pointing";
+import { detectPointing, POINTING_UP, toUserHand } from "./pointing";
 import type { Hand, HandFrame } from "./types";
 
 function hand(gesture: string, score: number, handedness: string): Hand {
@@ -40,18 +40,17 @@ describe("detectPointing", () => {
 		expect(detectPointing(frame([])).ok).toBe(false);
 	});
 
-	it("fires on the right hand pointing up", () => {
-		const m = detectPointing(frame([hand(POINTING_UP, 0.9, RIGHT_HAND_LABEL)]));
-		expect(m.ok).toBe(true);
-		expect(m.hand).toBe("right");
-		expect(m.reason).toBe("pointing");
-	});
-
-	it("does not fire on the left hand", () => {
-		const m = detectPointing(frame([hand(POINTING_UP, 0.9, LEFT_HAND_LABEL)]));
-		expect(m.ok).toBe(false);
-		expect(m.hand).toBe("left");
-		expect(m.reason).toBe("use your right hand");
+	it("fires on either hand", () => {
+		for (const [label, expected] of [
+			[RIGHT_HAND_LABEL, "right"],
+			[LEFT_HAND_LABEL, "left"],
+		] as const) {
+			const m = detectPointing(frame([hand(POINTING_UP, 0.9, label)]));
+			expect(m.ok).toBe(true);
+			expect(m.reason).toBe("pointing");
+			// Reported for the HUD, but not gated on.
+			expect(m.hand).toBe(expected);
+		}
 	});
 
 	it("does not fire on other gestures", () => {
@@ -74,9 +73,12 @@ describe("detectPointing", () => {
 		expect(m.hand).toBe("right");
 	});
 
-	it("honours a hand:any override", () => {
-		const cfg = { ...DEFAULT_POINTING, hand: "any" as const };
-		expect(detectPointing(frame([hand(POINTING_UP, 0.9, LEFT_HAND_LABEL)]), cfg).ok).toBe(true);
+	it("still fires when the non-pointing hand is the other one", () => {
+		const m = detectPointing(
+			frame([hand(POINTING_UP, 0.8, LEFT_HAND_LABEL), hand("Closed_Fist", 0.99, RIGHT_HAND_LABEL)]),
+		);
+		expect(m.ok).toBe(true);
+		expect(m.hand).toBe("left");
 	});
 
 	it("reports the raw label so a swap is diagnosable", () => {

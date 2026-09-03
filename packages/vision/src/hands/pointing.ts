@@ -5,21 +5,19 @@ export const POINTING_UP = "Pointing_Up";
 export interface PointingConfig {
 	/** Minimum classifier confidence. */
 	scoreMin: number;
-	/** Which of the person's hands must point. */
-	hand: "left" | "right" | "any";
 	/**
 	 * Whether the frames handed to the detector are mirrored.
 	 *
 	 * MediaPipe labels handedness assuming a mirrored selfie image. We feed it
 	 * the raw camera frame and mirror only in CSS for display, so its labels
-	 * are swapped relative to the actual person.
+	 * are swapped relative to the actual person. Only affects the reported
+	 * hand, which is informational — either hand triggers.
 	 */
 	inputMirrored: boolean;
 }
 
 export const DEFAULT_POINTING: PointingConfig = {
 	scoreMin: 0.5,
-	hand: "right",
 	inputMirrored: false,
 };
 
@@ -27,7 +25,10 @@ export interface PointingMetrics {
 	ok: boolean;
 	/** A pointing hand was seen, whichever hand it was. */
 	pointing: boolean;
-	/** Which of the person's hands is pointing, corrected for mirroring. */
+	/**
+	 * Which of the person's hands is pointing, corrected for mirroring.
+	 * Informational only — either hand triggers.
+	 */
 	hand: "left" | "right" | "unknown";
 	/** Raw MediaPipe label, shown in the HUD so a swap is diagnosable. */
 	rawHandedness: string;
@@ -53,7 +54,7 @@ export function toUserHand(label: string, inputMirrored: boolean): "left" | "rig
 }
 
 /**
- * Detects an index finger raised on the requested hand.
+ * Detects a raised index finger on either hand.
  *
  * Uses MediaPipe's built-in Pointing_Up class rather than hand-rolled landmark
  * geometry: the classifier already handles finger curl, orientation and the
@@ -84,8 +85,5 @@ export function detectPointing(
 
 	if (!best.pointing) return { ...base, ok: false, reason: "point your index finger up" };
 	if (best.score < config.scoreMin) return { ...base, ok: false, reason: "hold the point steady" };
-	if (config.hand !== "any" && best.hand !== config.hand) {
-		return { ...base, ok: false, reason: `use your ${config.hand} hand` };
-	}
 	return { ...base, ok: true, reason: "pointing" };
 }

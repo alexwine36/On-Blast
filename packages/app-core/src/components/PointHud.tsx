@@ -11,7 +11,7 @@ export function PointHud({ pointing, armed }: PointHudProps) {
 	return (
 		<section className="gesture">
 			<header className="gesture__head">
-				<span className="gesture__title">Point · {CFG.hand} hand</span>
+				<span className="gesture__title">Point</span>
 				<span className={`gesture__state ${pointing.ok ? "is-ok" : ""}`}>
 					{armed ? pointing.reason : "spent — hit ON BLAST to re-arm"}
 				</span>
@@ -31,17 +31,18 @@ export function PointHud({ pointing, armed }: PointHudProps) {
 						<td className="gesture__num" />
 						<td className="gesture__limit">≥ {CFG.scoreMin}</td>
 					</tr>
-					<tr className={pointing.hand === CFG.hand ? "is-pass" : ""}>
+					<tr>
 						<td>Which hand</td>
 						<td className="gesture__num">{pointing.hand}</td>
 						<td className="gesture__num">{pointing.rawHandedness || "—"}</td>
-						<td className="gesture__limit">{CFG.hand}</td>
+						<td className="gesture__limit">either</td>
 					</tr>
 				</tbody>
 			</table>
 			<p className="gesture__hint">
-				Second column is MediaPipe's raw label. It assumes a mirrored image and ours is not, so it
-				is inverted on purpose — if "which hand" reads backwards, flip <code>inputMirrored</code>.
+				Either hand triggers; the hand is shown for information only. The second column is
+				MediaPipe's raw label, which reads inverted because it assumes a mirrored image and ours is
+				not.
 			</p>
 		</section>
 	);
