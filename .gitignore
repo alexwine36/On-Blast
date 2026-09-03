@@ -11,3 +11,4 @@ dist-ssr
 # The raw source clip stays local; the trimmed sting.wav that the app actually
 # plays is committed. See ATTRIBUTION.md.
 packages/app-core/assets/audio/sting-source.m4a
+apps/*/bun.lock
