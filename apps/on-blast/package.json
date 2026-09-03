@@ -12,8 +12,7 @@
 		"setup:assets": "bash scripts/fetch-assets.sh"
 	},
 	"dependencies": {
-		"@on-blast/audio": "workspace:*",
-		"@on-blast/vision": "workspace:*",
+		"@on-blast/app-core": "workspace:*",
 		"@tauri-apps/api": "^2",
 		"@tauri-apps/plugin-opener": "^2",
 		"react": "^19.1.0",

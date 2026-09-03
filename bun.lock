@@ -15,8 +15,7 @@
       "name": "on-blast",
       "version": "0.1.0",
       "dependencies": {
-        "@on-blast/audio": "workspace:*",
-        "@on-blast/vision": "workspace:*",
+        "@on-blast/app-core": "workspace:*",
         "@tauri-apps/api": "^2",
         "@tauri-apps/plugin-opener": "^2",
         "react": "^19.1.0",
@@ -29,6 +28,23 @@
         "@vitejs/plugin-react": "^4.6.0",
         "typescript": "~5.8.3",
         "vite": "^7.0.4",
+      },
+    },
+    "packages/app-core": {
+      "name": "@on-blast/app-core",
+      "version": "0.0.0",
+      "dependencies": {
+        "@on-blast/audio": "workspace:*",
+        "@on-blast/vision": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/react": "^19.1.8",
+        "@types/react-dom": "^19.1.6",
+        "typescript": "~5.8.3",
+      },
+      "peerDependencies": {
+        "react": "^19",
+        "react-dom": "^19",
       },
     },
     "packages/audio": {
@@ -171,6 +187,8 @@
     "@mediapipe/tasks-vision": ["@mediapipe/tasks-vision@1.0.1", "", {}, "sha512-rvRE2FmAZ6ZxKSw7wq+e+jQDpN3t1B/tD2mJz9SmAzb1msoDkd4dMoE4wAh8Z30Um0PQwLiHr9QtomhmXk3aUQ=="],
 
     "@napi-rs/lzma-linux-x64-gnu": ["@napi-rs/lzma-linux-x64-gnu@1.5.1", "", { "os": "linux", "cpu": "x64" }, "sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ=="],
+
+    "@on-blast/app-core": ["@on-blast/app-core@workspace:packages/app-core"],
 
     "@on-blast/audio": ["@on-blast/audio@workspace:packages/audio"],
 

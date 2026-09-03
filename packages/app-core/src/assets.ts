@@ -14,8 +14,9 @@ export interface AssetUrls {
 	voice: string;
 }
 
-export function resolveAssets(base: string = import.meta.env.BASE_URL): AssetUrls {
-	const b = base.endsWith("/") ? base : `${base}/`;
+export function resolveAssets(base?: string): AssetUrls {
+	const resolved = base ?? import.meta.env.BASE_URL ?? "/";
+	const b = resolved.endsWith("/") ? resolved : `${resolved}/`;
 	return {
 		wasmPath: `${b}mediapipe/wasm`,
 		handModel: `${b}mediapipe/models/gesture_recognizer.task`,
