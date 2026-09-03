@@ -1,0 +1,72 @@
+name: Deploy web to Pages
+
+on:
+  push:
+    branches: [main]
+  # Allows a manual redeploy without an empty commit.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two deploys at once, but let an in-flight one finish rather than
+# cancelling a partial publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.11
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      # ~42 MB of MediaPipe wasm and models. Not committed; the wasm comes from
+      # node_modules and the model is downloaded, so cache on the script hash.
+      - name: Cache staged assets
+        id: assets
+        uses: actions/cache@v4
+        with:
+          path: apps/web/public
+          key: web-assets-${{ hashFiles('scripts/stage-assets.sh', 'bun.lock') }}
+
+      - name: Stage assets
+        if: steps.assets.outputs.cache-hit != 'true'
+        run: bash scripts/stage-assets.sh web
+
+      - name: Build
+        run: bunx turbo run build --filter=web
+
+      - name: Verify the subpath base was applied
+        # A base mismatch 404s every asset in production while looking fine
+        # locally, so fail the deploy here instead of shipping a broken site.
+        run: |
+          grep -q '"/On-Blast/assets/' apps/web/dist/index.html \
+            || { echo "index.html is not referencing /On-Blast/ assets"; exit 1; }
+          test -f apps/web/dist/mediapipe/models/gesture_recognizer.task
+          test -f apps/web/dist/audio/sting.wav
+          echo "base path and assets verified"
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
