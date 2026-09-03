@@ -74,8 +74,13 @@ export interface AudioEngineOptions {
 	 */
 	voiceUrl?: string | null;
 }
-/** Measured pitch of that grain; the reference for every transposition. */
-const VOICE_BASE_FREQ = 440; // A4
+/**
+ * Measured pitch of the grain, and the reference for every transposition.
+ *
+ * 439.2 rather than a nominal 440: that is the pitch that maximised energy
+ * when folding 157 periods together, so it is what the sample actually is.
+ */
+const VOICE_BASE_FREQ = 439.2;
 
 export function createWebAudioEngine({
 	stingUrl = null,
@@ -154,12 +159,14 @@ export function createWebAudioEngine({
 	/** One looping vocal grain whose rate is retuned per note. Kept running
 	 *  rather than retriggered, so stepping notes never clicks. */
 	let voiceSource: AudioBufferSourceNode | null = null;
+	let voiceBuffer: AudioBuffer | null = null;
 
 	if (voiceUrl) {
 		void fetch(voiceUrl)
 			.then((r) => r.arrayBuffer())
 			.then((b) => ctx.decodeAudioData(b))
 			.then((buf) => {
+				voiceBuffer = buf;
 				const src = ctx.createBufferSource();
 				src.buffer = buf;
 				src.loop = true;
@@ -272,11 +279,46 @@ export function createWebAudioEngine({
 	 * a timer, so the rhythm is sample-accurate and immune to whatever the
 	 * pose loop is doing on the main thread.
 	 */
+	/**
+	 * One note from the sampled patch, retuned.
+	 *
+	 * The grain is period-averaged over 157 cycles of the source, so it is
+	 * perfectly periodic and carries ~11 dB less inter-harmonic noise than a
+	 * raw slice would — which matters because looping a raw slice turns the
+	 * room's crowd noise into a repeating buzz.
+	 */
+	function sampledNote(buffer: AudioBuffer, freq: number, start: number, dur: number): void {
+		const amp = ctx.createGain();
+		amp.gain.setValueAtTime(0.0001, start);
+		amp.gain.linearRampToValueAtTime(PHRASE_LEVEL, start + PHRASE_ENV.attack);
+		amp.gain.setValueAtTime(PHRASE_LEVEL, start + Math.max(dur, 0.05));
+		amp.gain.exponentialRampToValueAtTime(0.0001, start + dur + PHRASE_ENV.release);
+
+		// Below every note in the phrase, so this only clears residual rumble.
+		const hp = ctx.createBiquadFilter();
+		hp.type = "highpass";
+		hp.frequency.value = 120;
+
+		const src = ctx.createBufferSource();
+		src.buffer = buffer;
+		src.loop = true;
+		src.playbackRate.value = freq / VOICE_BASE_FREQ;
+		src.connect(hp);
+		hp.connect(amp);
+		amp.connect(master);
+		src.start(start);
+		src.stop(start + dur + PHRASE_ENV.release + 0.05);
+	}
+
 	function playPhrase(phrase: Phrase): void {
 		if (ctx.state !== "running") void ctx.resume();
 		const t0 = ctx.currentTime + 0.02;
 		for (const note of phrase.notes) {
-			synthNote(midiToFreq(note.midi), t0 + note.startMs / 1000, note.durMs / 1000);
+			const freq = midiToFreq(note.midi);
+			const start = t0 + note.startMs / 1000;
+			const dur = note.durMs / 1000;
+			if (voiceBuffer) sampledNote(voiceBuffer, freq, start, dur);
+			else synthNote(freq, start, dur);
 		}
 	}
 
