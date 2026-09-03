@@ -1,4 +1,4 @@
-import type { AudioEngine, AudioEngineOptions, AudioStatus } from "@on-blast/audio";
+import type { AudioEngine, AudioEngineOptions, AudioStatus, Phrase } from "@on-blast/audio";
 import { createWebAudioEngine } from "@on-blast/audio";
 import { useEffect, useRef, useState } from "react";
 
@@ -50,6 +50,7 @@ export function useAudioEngine(options: AudioEngineOptions) {
 		keyName: engineRef.current?.keyName ?? "",
 		tempoLabel: engineRef.current?.tempoLabel ?? "",
 		playSting: () => engineRef.current?.playSting(),
+		playPhrase: (phrase: Phrase) => engineRef.current?.playPhrase(phrase),
 		setTone: (active: boolean, pitch: number) => engineRef.current?.setTone(active, pitch),
 		unlock: async () => {
 			const engine = engineRef.current;

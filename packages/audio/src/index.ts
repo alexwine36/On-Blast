@@ -1,3 +1,5 @@
+export type { Phrase, PhraseNote } from "./phrase";
+export { ON_BLAST_PHRASE } from "./phrase";
 export type { CamelotCode, CamelotKey, ScaleName } from "./scale";
 // Musical helpers. Exported because the UI displays the key and note names,
 // and because the scale/tempo logic is the part worth testing in isolation.

@@ -4,9 +4,11 @@ interface StatsHudProps {
 	stats: VisionStats;
 	ready: boolean;
 	stingSource: "sample" | "synth";
+	/** False once the phrase has played; only an ON BLAST re-arms it. */
+	phraseArmed: boolean;
 }
 
-export function StatsHud({ stats, ready, stingSource }: StatsHudProps) {
+export function StatsHud({ stats, ready, stingSource, phraseArmed }: StatsHudProps) {
 	const backendKnown = ready && stats.backend !== "—";
 
 	return (
@@ -38,6 +40,14 @@ export function StatsHud({ stats, ready, stingSource }: StatsHudProps) {
 			<div className="hud__item">
 				<dt>Hands</dt>
 				<dd>{stats.metrics.handsSeen}</dd>
+			</div>
+			<div className="hud__item">
+				<dt>Phrase</dt>
+				<dd>
+					<span className={`hud__badge hud__badge--${phraseArmed ? "webgpu" : "cpu"}`}>
+						{phraseArmed ? "armed" : "spent"}
+					</span>
+				</dd>
 			</div>
 			<div className="hud__item">
 				<dt>Sting</dt>

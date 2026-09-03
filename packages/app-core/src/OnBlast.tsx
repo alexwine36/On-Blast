@@ -1,5 +1,6 @@
+import { ON_BLAST_PHRASE } from "@on-blast/audio";
 import type { PostureMetrics } from "@on-blast/vision";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AssetUrls } from "./assets";
 import { resolveAssets } from "./assets";
 import { CameraPicker } from "./components/CameraPicker";
@@ -50,15 +51,33 @@ export function OnBlast({ assetBase, features }: OnBlastProps = {}) {
 	const model = useHandDetector({ wasmPath: assets.wasmPath, modelPath: assets.handModel });
 	const body = useBodyDetector(
 		{ wasmPath: assets.wasmPath, modelPath: assets.bodyModel },
-		flags.shoulderSynth,
+		flags.armPhrase,
 	);
 	const audio = useAudioEngine({ stingUrl: assets.sting, voiceUrl: assets.voice });
 
+	/**
+	 * The phrase fires once per ON BLAST.
+	 *
+	 * Arms out plays it, then latches spent; only a hit re-arms. Without the
+	 * latch, standing with your arms out replays it endlessly.
+	 */
+	const phraseArmed = useRef(true);
+	const [armed, setArmed] = useState(true);
+
 	const handleTrigger = useCallback(() => {
 		audio.playSting();
+		phraseArmed.current = true;
+		setArmed(true);
 		setHitId((n) => n + 1);
 		setHitVisible(true);
 	}, [audio]);
+
+	const handleArmsOut = useCallback(() => {
+		if (!flags.armPhrase || !phraseArmed.current) return;
+		phraseArmed.current = false;
+		setArmed(false);
+		audio.playPhrase(ON_BLAST_PHRASE);
+	}, [audio, flags.armPhrase]);
 
 	// Auto-hide. hitId is depended on deliberately: it is not read in the body,
 	// but a new hit must restart the timer rather than inherit the old one's
@@ -71,13 +90,9 @@ export function OnBlast({ assetBase, features }: OnBlastProps = {}) {
 	}, [hitId, hitVisible]);
 
 	// Shoulder height drives the drone pitch; arms-out is the gate that sounds it.
-	const handlePosture = useCallback(
-		(posture: PostureMetrics) => {
-			if (!flags.shoulderSynth) return;
-			audio.setTone(posture.armsOut, posture.lift);
-		},
-		[audio, flags.shoulderSynth],
-	);
+	// Posture is now only read for the HUD; the phrase replaces the
+	// shoulder-height synth that followed it continuously.
+	const handlePosture = useCallback((_posture: PostureMetrics) => {}, []);
 
 	const { videoRef, canvasRef, stats, reset } = useVisionLoop({
 		detector: model.detector,
@@ -85,6 +100,7 @@ export function OnBlast({ assetBase, features }: OnBlastProps = {}) {
 		stream: camera.stream,
 		active: true,
 		onTrigger: handleTrigger,
+		onArmsOut: handleArmsOut,
 		onPosture: handlePosture,
 	});
 
@@ -152,7 +168,7 @@ export function OnBlast({ assetBase, features }: OnBlastProps = {}) {
 					holdProgress={stats.holdProgress}
 					cooldown={stats.cooldown}
 				/>
-				{flags.shoulderSynth ? (
+				{flags.armPhrase ? (
 					<ShoulderHud
 						posture={stats.posture}
 						note={audio.note}
@@ -161,7 +177,12 @@ export function OnBlast({ assetBase, features }: OnBlastProps = {}) {
 						tempoLabel={audio.tempoLabel}
 					/>
 				) : null}
-				<StatsHud stats={stats} ready={model.status === "ready"} stingSource={audio.source} />
+				<StatsHud
+					phraseArmed={armed}
+					stats={stats}
+					ready={model.status === "ready"}
+					stingSource={audio.source}
+				/>
 			</div>
 		</main>
 	);

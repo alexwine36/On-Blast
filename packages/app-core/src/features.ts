@@ -6,15 +6,15 @@
  */
 export interface Features {
 	/**
-	 * Shoulder-driven melodic synth (body pose -> quantized vocal notes).
+	 * Outstretched arms trigger the pre-composed phrase transcribed from the
+	 * original clip.
 	 *
-	 * Off: the interaction didn't work in practice and is being rethought.
-	 * While off the body model is never loaded, which saves ~5.8 MB of
-	 * download and roughly halves per-frame inference cost.
+	 * Replaces the earlier shoulder-height synth, which tracked continuously
+	 * and never felt musical. Needs the body pose model.
 	 */
-	shoulderSynth: boolean;
+	armPhrase: boolean;
 }
 
 export const DEFAULT_FEATURES: Features = {
-	shoulderSynth: false,
+	armPhrase: true,
 };

@@ -1,3 +1,5 @@
+import type { Phrase } from "./phrase";
+
 export type AudioStatus = "idle" | "blocked" | "ready";
 
 /**
@@ -23,6 +25,11 @@ export interface AudioEngine {
 	setTone(active: boolean, pitch: number): void;
 	/** Name of the note currently sounding, e.g. "C4", or null when silent. */
 	readonly currentNote: string | null;
+	/**
+	 * Play a pre-composed phrase, scheduled on the audio clock so its timing
+	 * does not depend on frame rate.
+	 */
+	playPhrase(phrase: Phrase): void;
 	/** Musical key of the voice, e.g. "C major (8B)". */
 	readonly keyName: string;
 	/** Note-change grid, e.g. "100 BPM 1/16". */

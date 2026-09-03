@@ -36,13 +36,10 @@ echo "==> gesture_recognizer.task"
 curl -fsSL -o "$DEST/mediapipe/models/gesture_recognizer.task" \
   "$MODEL_BASE/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task"
 
-# The body model is only needed when the shoulder synth is enabled; it is off,
-# so skip 5.8 MB of download.
-if [ "${WITH_BODY_MODEL:-0}" = "1" ]; then
-  echo "==> pose_landmarker_lite.task"
-  curl -fsSL -o "$DEST/mediapipe/models/pose_landmarker_lite.task" \
-    "$MODEL_BASE/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task"
-fi
+# Required again: the arm-phrase trigger needs body pose.
+echo "==> pose_landmarker_lite.task"
+curl -fsSL -o "$DEST/mediapipe/models/pose_landmarker_lite.task" \
+  "$MODEL_BASE/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task"
 
 # Audio. The sting is licensed and git-ignored, so it is present locally and
 # absent in CI — the engine falls back to its synthesized sting either way.

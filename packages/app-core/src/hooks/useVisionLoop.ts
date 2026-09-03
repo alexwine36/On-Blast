@@ -22,6 +22,8 @@ import { useEffect, useRef, useState } from "react";
 const HOLD_MS = 5;
 /** Disarm window after a hit, so one gesture is one sting. */
 const COOLDOWN_MS = 150;
+/** Arms must be held out briefly before the phrase fires. */
+const ARMS_HOLD_MS = 250;
 
 const HAND_COLORS = ["rgb(0,255,0)", "rgb(51,153,255)"];
 
@@ -76,6 +78,8 @@ interface Options {
 	/** When false the detect loop idles — used to freeze things after the sting. */
 	active: boolean;
 	onTrigger: () => void;
+	/** Fires on the edge where the arms reach the outstretched pose. */
+	onArmsOut: () => void;
 	/** Called every detection pass with the current shoulder state. */
 	onPosture: (posture: PostureMetrics) => void;
 }
@@ -86,6 +90,7 @@ export function useVisionLoop({
 	stream,
 	active,
 	onTrigger,
+	onArmsOut,
 	onPosture,
 }: Options) {
 	const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -105,6 +110,10 @@ export function useVisionLoop({
 	onTriggerRef.current = onTrigger;
 	const onPostureRef = useRef(onPosture);
 	onPostureRef.current = onPosture;
+	const onArmsOutRef = useRef(onArmsOut);
+	onArmsOutRef.current = onArmsOut;
+	// Edge-triggered with release required, so holding the pose fires once.
+	const armsHoldRef = useRef(new HoldTrigger(ARMS_HOLD_MS, 0));
 
 	const [stats, setStats] = useState<VisionStats>(EMPTY_STATS);
 
@@ -203,6 +212,9 @@ export function useVisionLoop({
 						const posture = detectPosture(body);
 						postureRef.current = posture;
 						onPostureRef.current(posture);
+						if (armsHoldRef.current.update(posture.armsOut, now).fired) {
+							onArmsOutRef.current();
+						}
 					}
 
 					const { progress, fired, cooldown } = holdRef.current.update(metrics.ok, now);
@@ -225,6 +237,7 @@ export function useVisionLoop({
 		return () => {
 			running = false;
 			holdRef.current.reset();
+			armsHoldRef.current.reset();
 			holdProgressRef.current = 0;
 			cooldownRef.current = 0;
 		};
@@ -255,6 +268,7 @@ export function useVisionLoop({
 		bodyFrameRef.current = null;
 		postureRef.current = NO_POSTURE;
 		holdRef.current.reset();
+		armsHoldRef.current.reset();
 		holdProgressRef.current = 0;
 		cooldownRef.current = 0;
 	};

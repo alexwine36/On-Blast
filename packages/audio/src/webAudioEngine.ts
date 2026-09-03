@@ -1,3 +1,4 @@
+import type { Phrase } from "./phrase";
 import type { CamelotCode } from "./scale";
 import {
 	buildScale,
@@ -153,12 +154,14 @@ export function createWebAudioEngine({
 	/** One looping vocal grain whose rate is retuned per note. Kept running
 	 *  rather than retriggered, so stepping notes never clicks. */
 	let voiceSource: AudioBufferSourceNode | null = null;
+	let voiceBuffer: AudioBuffer | null = null;
 
 	if (voiceUrl) {
 		void fetch(voiceUrl)
 			.then((r) => r.arrayBuffer())
 			.then((b) => ctx.decodeAudioData(b))
 			.then((buf) => {
+				voiceBuffer = buf;
 				const src = ctx.createBufferSource();
 				src.buffer = buf;
 				src.loop = true;
@@ -199,6 +202,63 @@ export function createWebAudioEngine({
 			voiceFilter.frequency.cancelScheduledValues(t);
 			voiceFilter.frequency.setValueAtTime(Math.min(9000, freq * 9), t);
 			voiceFilter.frequency.setTargetAtTime(Math.min(5200, freq * 4), t + 0.014, 0.14);
+		}
+	}
+
+	/**
+	 * Schedule a phrase against the audio clock.
+	 *
+	 * Every note is placed up front at an absolute time rather than fired from
+	 * a timer, so the rhythm is sample-accurate and immune to whatever the
+	 * pose loop is doing on the main thread.
+	 */
+	function playPhrase(phrase: Phrase): void {
+		if (ctx.state !== "running") void ctx.resume();
+		const t0 = ctx.currentTime + 0.02;
+
+		for (const note of phrase.notes) {
+			const start = t0 + note.startMs / 1000;
+			const dur = note.durMs / 1000;
+			const freq = midiToFreq(note.midi);
+
+			const gain = ctx.createGain();
+			gain.gain.setValueAtTime(0.0001, start);
+			gain.gain.linearRampToValueAtTime(VOICE_LEVEL * 1.4, start + 0.012);
+			gain.gain.setValueAtTime(VOICE_LEVEL * 1.4, start + Math.max(0.02, dur * 0.7));
+			// Short release so fast sixteenths stay articulate instead of smearing.
+			gain.gain.exponentialRampToValueAtTime(0.0001, start + dur + 0.06);
+
+			const filter = ctx.createBiquadFilter();
+			filter.type = "lowpass";
+			filter.frequency.value = 9000;
+			gain.connect(filter);
+			filter.connect(master);
+
+			if (voiceBuffer) {
+				const src = ctx.createBufferSource();
+				src.buffer = voiceBuffer;
+				src.loop = true;
+				src.playbackRate.value = freq / VOICE_BASE_FREQ;
+				src.connect(gain);
+				src.start(start);
+				src.stop(start + dur + 0.1);
+			} else {
+				// Oscillator fallback, so a missing sample never means silence.
+				for (const [type, level] of [
+					["triangle", 1],
+					["sawtooth", 0.3],
+				] as const) {
+					const osc = ctx.createOscillator();
+					osc.type = type;
+					osc.frequency.value = freq;
+					const g = ctx.createGain();
+					g.gain.value = level;
+					osc.connect(g);
+					g.connect(gain);
+					osc.start(start);
+					osc.stop(start + dur + 0.1);
+				}
+			}
 		}
 	}
 
@@ -418,6 +478,7 @@ export function createWebAudioEngine({
 			if (ctx.state !== "running") await ctx.resume();
 		},
 		setTone,
+		playPhrase,
 		playSting() {
 			if (ctx.state !== "running") void ctx.resume();
 			if (sample) playSample(sample);
