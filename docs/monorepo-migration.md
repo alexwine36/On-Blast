@@ -1,7 +1,9 @@
 # on-blast monorepo migration
 
-Status: **proposed** — not yet started. Written before any restructuring so the
-order of operations is agreed up front.
+Status: **complete** — all nine phases landed, one commit each (8 and 9 share
+one). Kept as the record of why the structure is the way it is.
+
+Not yet pushed: the remote exists but has never received a commit.
 
 ## Where we are
 
@@ -242,30 +244,19 @@ unused MediaPipe wasm variants is a possible optimisation, not a blocker.
 | npm scope | `@on-blast/*` |
 | `apps/web` contents | The full demo, same `<OnBlast />` as Tauri |
 
-## Licensing: the sting cannot be published
+## Licensing: resolved by shipping it
 
-The repo is public and Pages is public, so pushing is publishing.
+Initially withheld — the repo is public, so pushing is publishing, and the
+sting is cut from the sketch.
 
-`public/audio/sting.wav` and `sting-source.m4a` are cut from the SNL sketch.
-Committing them to a public repo and serving them from a public site is
-distribution of copyrighted audio — a different thing from the local prototype
-they were fine for.
+**Reversed by the repo owner:** this is a free, non-commercial hobby project
+and the clip is ~0.4 seconds. `sting.wav` is committed and ships in the public
+build; only the raw source clip stays local. `ATTRIBUTION.md` records the
+source and an easy removal path, and the engine still falls back to a
+synthesized sting if the file is ever deleted.
 
-`voice-a4.wav` is derived from a recording of the user's own voice and is not
-affected.
-
-Options, in order of preference:
-
-1. **Git-ignore the sting and stage it locally.** The engine already falls back
-   to a synthesized sting when the sample is missing, and that fallback is
-   tested — so the public build degrades cleanly to original audio while local
-   builds keep the real hit. Costs nothing and needs no new code.
-2. **Commission an original sting** to replace it everywhere. Best long-term if
-   the bit ships.
-3. **Make the repo private.** Rules out GitHub Pages on a free plan.
-
-Assumed (1) below. This must be settled before the first push, not after —
-public git history is not easily retracted.
+Both blobs remain in history from `0b206e6`. Scrubbing them is now close to
+pointless given `sting.wav` is deliberately public, so no rewrite is planned.
 
 ## Risks
 
@@ -276,5 +267,5 @@ public git history is not easily retracted.
 | Tauri before-commands run from `apps/on-blast` and need workspace deps | Verified in phase 1 before anything moves |
 | 104 assertions lost in the move | Porting them is a named deliverable of phases 3–4 |
 | Asset staging adds CI time | Cached by `actions/cache` keyed on the script hash |
-| Copyrighted sting reaching a public repo | Git-ignored and never committed; public build uses the synth fallback |
+| ~~Copyrighted sting reaching a public repo~~ | Deliberately shipped; see the licensing section |
 | Pages base path case mismatch (`on-blast` vs `On-Blast`) | Base is `/On-Blast/`; verified with `preview` at the subpath before deploying |
